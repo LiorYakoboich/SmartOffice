@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SmartOffice.AssetService/SmartOffice.AssetService.csproj" />
+  <Project Path="SmartOffice.AuthService/SmartOffice.AuthService.csproj" />
+</Solution>

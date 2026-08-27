@@ -1,0 +1,49 @@
+@SmartOffice.AuthService_HostAddress = https://localhost:7195
+
+### Register Admin
+
+POST {{SmartOffice.AuthService_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "admin",
+  "password": "Admin123!",
+  "role": "Admin"
+}
+
+###
+
+### Register Member
+
+POST {{SmartOffice.AuthService_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "member",
+  "password": "Member123!",
+  "role": "Member"
+}
+
+###
+
+### Login Admin
+
+POST {{SmartOffice.AuthService_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "name": "admin",
+  "password": "Admin123!"
+}
+
+###
+
+### Login Member
+
+POST {{SmartOffice.AuthService_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "name": "member",
+  "password": "Member123!"
+}

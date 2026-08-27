@@ -1,0 +1,43 @@
+@SmartOffice.AssetService_HostAddress = https://localhost:7244
+
+@AdminToken = PASTE_ADMIN_TOKEN_HERE
+@MemberToken = PASTE_MEMBER_TOKEN_HERE
+
+### GET assets without token
+GET {{SmartOffice.AssetService_HostAddress}}/api/assets
+Accept: application/json
+
+###
+
+### GET assets with Admin token
+GET {{SmartOffice.AssetService_HostAddress}}/api/assets
+Authorization: Bearer {{AdminToken}}
+Accept: application/json
+
+###
+
+### Create asset with Admin token
+POST {{SmartOffice.AssetService_HostAddress}}/api/assets
+Authorization: Bearer {{AdminToken}}
+Content-Type: application/json
+
+{
+  "name": "Meeting Room A",
+  "type": "Room",
+  "location": "Floor 2",
+  "status": "Available"
+}
+
+###
+
+### Create asset with Member token
+POST {{SmartOffice.AssetService_HostAddress}}/api/assets
+Authorization: Bearer {{MemberToken}}
+Content-Type: application/json
+
+{
+  "name": "Desk 101",
+  "type": "Desk",
+  "location": "Floor 1",
+  "status": "Available"
+}

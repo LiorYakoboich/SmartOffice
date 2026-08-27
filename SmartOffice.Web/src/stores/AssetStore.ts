@@ -1,0 +1,84 @@
+import { makeAutoObservable } from 'mobx'
+import { apiRequest, ASSET_API_URL } from '../services/api'
+import { authStore } from './AuthStore'
+
+export interface Asset {
+  id?: string
+  name: string
+  type: string
+  location: string
+  status: string
+  createdAt?: string
+}
+
+class AssetStore {
+  assets: Asset[] = []
+  loading = false
+  error = ''
+
+  constructor() {
+    makeAutoObservable(this)
+  }
+
+  async loadAssets() {
+    if (!authStore.token) {
+      return
+    }
+
+    this.loading = true
+    this.error = ''
+
+    try {
+      this.assets = await apiRequest<Asset[]>(ASSET_API_URL, {
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      })
+    } catch (error) {
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to load assets'
+    } finally {
+      this.loading = false
+    }
+  }
+
+  async createAsset(asset: Omit<Asset, 'id' | 'createdAt'>) {
+    if (!authStore.token) {
+      throw new Error('Authentication required')
+    }
+
+    this.loading = true
+    this.error = ''
+
+    try {
+      await apiRequest<Asset>(ASSET_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authStore.token}`,
+        },
+        body: JSON.stringify(asset),
+      })
+
+      await this.loadAssets()
+    } catch (error) {
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create asset'
+
+      throw error
+    } finally {
+      this.loading = false
+    }
+  }
+
+  clear() {
+    this.assets = []
+    this.error = ''
+  }
+}
+
+export const assetStore = new AssetStore()

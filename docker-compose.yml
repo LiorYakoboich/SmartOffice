@@ -1,0 +1,23 @@
+services:
+  auth-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: smartoffice-auth-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - auth-db-data:/var/opt/mssql
+
+  assets-db:
+    image: mongo:8
+    container_name: smartoffice-assets-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - assets-db-data:/data/db
+
+volumes:
+  auth-db-data:
+  assets-db-data:
