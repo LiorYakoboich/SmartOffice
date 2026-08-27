@@ -75,6 +75,37 @@ class AssetStore {
     }
   }
 
+  async deleteAsset(id: string) {
+    if (!authStore.token) {
+      throw new Error('Authentication required')
+    }
+
+    this.loading = true
+    this.error = ''
+
+    try {
+      await apiRequest<void>(`${ASSET_API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      })
+
+      this.assets = this.assets.filter(
+        (asset) => asset.id !== id
+      )
+    } catch (error) {
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete asset'
+
+      throw error
+    } finally {
+      this.loading = false
+    }
+  }
+
   clear() {
     this.assets = []
     this.error = ''

@@ -42,5 +42,24 @@ namespace SmartOffice.AssetService.Controllers
                 createdAsset
             );
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteAsset(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest("Asset id is required.");
+            }
+
+            var deleted = await _mongoDbService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                return NotFound("Asset not found.");
+            }
+
+            return NoContent();
+        }
     }
 }

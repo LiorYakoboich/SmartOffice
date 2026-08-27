@@ -43,5 +43,14 @@ namespace SmartOffice.AssetService.Data
 
             return asset;
         }
+
+        public async Task<bool> DeleteAsync(string id)
+        {
+            var result = await _assets.DeleteOneAsync(
+                asset => asset.Id == id
+            );
+
+            return result.DeletedCount > 0;
+        }
     }
 }
