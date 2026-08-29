@@ -1,4 +1,6 @@
-import { makeAutoObservable } from 'mobx'
+import {
+  makeAutoObservable,
+} from 'mobx'
 
 import {
   apiRequest,
@@ -9,21 +11,7 @@ import {
 export interface AuthUser {
   id: number
 
-  /*
-    Display name.
-
-    Example:
-    Lior Yakobovich
-  */
-
   name: string
-
-  /*
-    Username used only for login.
-
-    Example:
-    liorushy1
-  */
 
   username?: string
 
@@ -55,26 +43,22 @@ interface RegisterResponse {
 }
 
 class AuthStore {
-  token: string | null = null
+  token: string | null =
+    null
 
-  user: AuthUser | null = null
+  user: AuthUser | null =
+    null
 
   loading = false
 
   error = ''
 
   constructor() {
-    makeAutoObservable(this)
+    makeAutoObservable(
+      this
+    )
 
     this.restoreSession()
-
-    /*
-      Listen for a global 401 response.
-
-      This allows every API call in the application
-      to automatically sign the user out when the
-      JWT expires.
-    */
 
     window.addEventListener(
       UNAUTHORIZED_EVENT,
@@ -91,15 +75,29 @@ class AuthStore {
 
   get isAdmin() {
     return (
-      this.user?.role === 'Admin'
+      this.user?.role ===
+      'Admin'
+    )
+  }
+
+  get isHR() {
+    return (
+      this.user?.role ===
+      'HR'
     )
   }
 
   /*
-    ------------------------------------------------
-    SESSION RESTORE
-    ------------------------------------------------
+    Both HR and Admin can process
+    locker approval workflows.
   */
+
+  get canManageLockerRequests() {
+    return (
+      this.isAdmin ||
+      this.isHR
+    )
+  }
 
   private restoreSession() {
     const storedToken =
@@ -132,12 +130,6 @@ class AuthStore {
     }
   }
 
-  /*
-    ------------------------------------------------
-    SAVE SESSION
-    ------------------------------------------------
-  */
-
   private saveSession() {
     if (
       !this.token ||
@@ -159,12 +151,6 @@ class AuthStore {
     )
   }
 
-  /*
-    ------------------------------------------------
-    CLEAR SESSION
-    ------------------------------------------------
-  */
-
   private clearSession() {
     this.token = null
 
@@ -179,26 +165,8 @@ class AuthStore {
     )
   }
 
-  /*
-    ------------------------------------------------
-    SESSION EXPIRED
-    ------------------------------------------------
-
-    Arrow function is used so "this" remains
-    connected to AuthStore when called by
-    window.addEventListener.
-  */
-
   private handleUnauthorized =
     () => {
-      /*
-        If there is no current session,
-        this may simply be a failed login attempt.
-
-        In that case login() will display the
-        authentication error itself.
-      */
-
       if (
         !this.token &&
         !this.user
@@ -213,12 +181,6 @@ class AuthStore {
       this.error =
         'Your session expired. Please sign in again.'
     }
-
-  /*
-    ------------------------------------------------
-    LOGIN
-    ------------------------------------------------
-  */
 
   async login(
     username: string,
@@ -240,10 +202,11 @@ class AuthStore {
                 'application/json',
             },
 
-            body: JSON.stringify({
-              name: username,
-              password,
-            }),
+            body:
+              JSON.stringify({
+                name: username,
+                password,
+              }),
           }
         )
 
@@ -268,12 +231,6 @@ class AuthStore {
     }
   }
 
-  /*
-    ------------------------------------------------
-    REGISTER
-    ------------------------------------------------
-  */
-
   async register(
     firstName: string,
     lastName: string,
@@ -296,19 +253,13 @@ class AuthStore {
                 'application/json',
             },
 
-            body: JSON.stringify({
-              firstName,
-              lastName,
-
-              /*
-                The backend still uses "Name"
-                as the username database field.
-              */
-
-              name: username,
-
-              password,
-            }),
+            body:
+              JSON.stringify({
+                firstName,
+                lastName,
+                name: username,
+                password,
+              }),
           }
         )
 
@@ -324,12 +275,6 @@ class AuthStore {
       this.loading = false
     }
   }
-
-  /*
-    ------------------------------------------------
-    MANUAL LOGOUT
-    ------------------------------------------------
-  */
 
   logout() {
     this.error = ''

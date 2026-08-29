@@ -7,6 +7,9 @@ export const ASSET_API_URL =
 export const RESERVATION_API_URL =
   'https://localhost:7244/api/reservations'
 
+export const LOCKER_API_URL =
+  'https://localhost:7244/api/lockers'
+
 export const UNAUTHORIZED_EVENT =
   'smartoffice:unauthorized'
 
@@ -15,21 +18,15 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const response =
-    await fetch(url, options)
+    await fetch(
+      url,
+      options
+    )
 
-  /*
-    If the API returns 401, the JWT is either:
-
-    - expired
-    - invalid
-    - missing
-
-    We notify AuthStore globally so the application
-    can clear the stale session and return the user
-    to the login page automatically.
-  */
-
-  if (response.status === 401) {
+  if (
+    response.status ===
+    401
+  ) {
     window.dispatchEvent(
       new Event(
         UNAUTHORIZED_EVENT
@@ -47,7 +44,10 @@ export async function apiRequest<T>(
     )
   }
 
-  if (response.status === 204) {
+  if (
+    response.status ===
+    204
+  ) {
     return {} as T
   }
 

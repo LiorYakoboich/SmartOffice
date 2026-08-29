@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+
 using SmartOffice.AssetService.Models;
 
 namespace SmartOffice.AssetService.Data
@@ -7,27 +8,40 @@ namespace SmartOffice.AssetService.Data
     public class MongoDbService
     {
         private readonly IMongoCollection<Asset> _assets;
+
         private readonly IMongoCollection<Reservation> _reservations;
 
-        public MongoDbService(IConfiguration configuration)
+        private readonly IMongoCollection<LockerRequest> _lockerRequests;
+
+        public MongoDbService(
+            IConfiguration configuration
+        )
         {
             var connectionString =
-                configuration["MongoDb:ConnectionString"]
+                configuration[
+                    "MongoDb:ConnectionString"
+                ]
                 ?? throw new InvalidOperationException(
                     "MongoDB connection string is missing."
                 );
 
             var databaseName =
-                configuration["MongoDb:DatabaseName"]
+                configuration[
+                    "MongoDb:DatabaseName"
+                ]
                 ?? throw new InvalidOperationException(
                     "MongoDB database name is missing."
                 );
 
             var client =
-                new MongoClient(connectionString);
+                new MongoClient(
+                    connectionString
+                );
 
             var database =
-                client.GetDatabase(databaseName);
+                client.GetDatabase(
+                    databaseName
+                );
 
             _assets =
                 database.GetCollection<Asset>(
@@ -37,6 +51,11 @@ namespace SmartOffice.AssetService.Data
             _reservations =
                 database.GetCollection<Reservation>(
                     "Reservations"
+                );
+
+            _lockerRequests =
+                database.GetCollection<LockerRequest>(
+                    "LockerRequests"
                 );
         }
 
@@ -57,7 +76,12 @@ namespace SmartOffice.AssetService.Data
                 string id
             )
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
             {
                 return null;
             }
@@ -78,9 +102,10 @@ namespace SmartOffice.AssetService.Data
             asset.CreatedAt =
                 DateTime.UtcNow;
 
-            await _assets.InsertOneAsync(
-                asset
-            );
+            await _assets
+                .InsertOneAsync(
+                    asset
+                );
 
             return asset;
         }
@@ -89,25 +114,88 @@ namespace SmartOffice.AssetService.Data
             UpdateAssetAsync(
                 string id,
                 string location,
-                string status
+                string status,
+                string? category = null,
+                string? description = null,
+                List<string>? features = null
             )
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
             {
                 return null;
             }
 
+            var updates =
+                new List<
+                    UpdateDefinition<Asset>
+                >
+                {
+                    Builders<Asset>
+                        .Update
+                        .Set(
+                            asset =>
+                                asset.Location,
+                            location
+                        ),
+
+                    Builders<Asset>
+                        .Update
+                        .Set(
+                            asset =>
+                                asset.Status,
+                            status
+                        )
+                };
+
+            if (category != null)
+            {
+                updates.Add(
+                    Builders<Asset>
+                        .Update
+                        .Set(
+                            asset =>
+                                asset.Category,
+                            category
+                        )
+                );
+            }
+
+            if (description != null)
+            {
+                updates.Add(
+                    Builders<Asset>
+                        .Update
+                        .Set(
+                            asset =>
+                                asset.Description,
+                            description
+                        )
+                );
+            }
+
+            if (features != null)
+            {
+                updates.Add(
+                    Builders<Asset>
+                        .Update
+                        .Set(
+                            asset =>
+                                asset.Features,
+                            features
+                        )
+                );
+            }
+
             var update =
-                Builders<Asset>.Update
-                    .Set(
-                        asset =>
-                            asset.Location,
-                        location
-                    )
-                    .Set(
-                        asset =>
-                            asset.Status,
-                        status
+                Builders<Asset>
+                    .Update
+                    .Combine(
+                        updates
                     );
 
             var options =
@@ -124,7 +212,9 @@ namespace SmartOffice.AssetService.Data
                 .FindOneAndUpdateAsync(
                     asset =>
                         asset.Id == id,
+
                     update,
+
                     options
                 );
         }
@@ -134,18 +224,27 @@ namespace SmartOffice.AssetService.Data
                 string id
             )
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
             {
                 return false;
             }
 
             var result =
-                await _assets.DeleteOneAsync(
-                    asset =>
-                        asset.Id == id
-                );
+                await _assets
+                    .DeleteOneAsync(
+                        asset =>
+                            asset.Id == id
+                    );
 
-            return result.DeletedCount > 0;
+            return (
+                result.DeletedCount >
+                0
+            );
         }
 
         // =========================================
@@ -187,7 +286,12 @@ namespace SmartOffice.AssetService.Data
                 string id
             )
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
             {
                 return null;
             }
@@ -195,7 +299,8 @@ namespace SmartOffice.AssetService.Data
             return await _reservations
                 .Find(
                     reservation =>
-                        reservation.Id == id
+                        reservation.Id ==
+                        id
                 )
                 .FirstOrDefaultAsync();
         }
@@ -208,34 +313,43 @@ namespace SmartOffice.AssetService.Data
             )
         {
             var conflictFilter =
-                Builders<Reservation>.Filter.And(
-                    Builders<Reservation>.Filter.Eq(
-                        reservation =>
-                            reservation.AssetId,
-                        assetId
-                    ),
+                Builders<Reservation>
+                    .Filter
+                    .And(
+                        Builders<Reservation>
+                            .Filter
+                            .Eq(
+                                reservation =>
+                                    reservation.AssetId,
 
-                    Builders<Reservation>.Filter.Lt(
-                        reservation =>
-                            reservation.StartTimeUtc,
-                        endTimeUtc
-                    ),
+                                assetId
+                            ),
 
-                    Builders<Reservation>.Filter.Gt(
-                        reservation =>
-                            reservation.EndTimeUtc,
-                        startTimeUtc
-                    )
-                );
+                        Builders<Reservation>
+                            .Filter
+                            .Lt(
+                                reservation =>
+                                    reservation.StartTimeUtc,
+
+                                endTimeUtc
+                            ),
+
+                        Builders<Reservation>
+                            .Filter
+                            .Gt(
+                                reservation =>
+                                    reservation.EndTimeUtc,
+
+                                startTimeUtc
+                            )
+                    );
 
             return await _reservations
-                .Find(conflictFilter)
+                .Find(
+                    conflictFilter
+                )
                 .AnyAsync();
         }
-
-        // =========================================
-        // ACTIVE / FUTURE RESERVATIONS
-        // =========================================
 
         public async Task<List<Reservation>>
             GetActiveOrFutureReservationsAsync(
@@ -245,31 +359,28 @@ namespace SmartOffice.AssetService.Data
             var nowUtc =
                 DateTime.UtcNow;
 
-            /*
-                Any reservation that has not ended yet
-                is still relevant.
-
-                This includes:
-
-                - reservation active right now
-                - reservation later today
-                - future reservation
-            */
-
             var filter =
-                Builders<Reservation>.Filter.And(
-                    Builders<Reservation>.Filter.Eq(
-                        reservation =>
-                            reservation.AssetId,
-                        assetId
-                    ),
+                Builders<Reservation>
+                    .Filter
+                    .And(
+                        Builders<Reservation>
+                            .Filter
+                            .Eq(
+                                reservation =>
+                                    reservation.AssetId,
 
-                    Builders<Reservation>.Filter.Gt(
-                        reservation =>
-                            reservation.EndTimeUtc,
-                        nowUtc
-                    )
-                );
+                                assetId
+                            ),
+
+                        Builders<Reservation>
+                            .Filter
+                            .Gt(
+                                reservation =>
+                                    reservation.EndTimeUtc,
+
+                                nowUtc
+                            )
+                    );
 
             return await _reservations
                 .Find(filter)
@@ -289,19 +400,27 @@ namespace SmartOffice.AssetService.Data
                 DateTime.UtcNow;
 
             var filter =
-                Builders<Reservation>.Filter.And(
-                    Builders<Reservation>.Filter.Eq(
-                        reservation =>
-                            reservation.AssetId,
-                        assetId
-                    ),
+                Builders<Reservation>
+                    .Filter
+                    .And(
+                        Builders<Reservation>
+                            .Filter
+                            .Eq(
+                                reservation =>
+                                    reservation.AssetId,
 
-                    Builders<Reservation>.Filter.Gt(
-                        reservation =>
-                            reservation.EndTimeUtc,
-                        nowUtc
-                    )
-                );
+                                assetId
+                            ),
+
+                        Builders<Reservation>
+                            .Filter
+                            .Gt(
+                                reservation =>
+                                    reservation.EndTimeUtc,
+
+                                nowUtc
+                            )
+                    );
 
             return await _reservations
                 .Find(filter)
@@ -329,7 +448,12 @@ namespace SmartOffice.AssetService.Data
                 string id
             )
         {
-            if (!ObjectId.TryParse(id, out _))
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
             {
                 return false;
             }
@@ -338,10 +462,555 @@ namespace SmartOffice.AssetService.Data
                 await _reservations
                     .DeleteOneAsync(
                         reservation =>
-                            reservation.Id == id
+                            reservation.Id ==
+                            id
                     );
 
-            return result.DeletedCount > 0;
+            return (
+                result.DeletedCount >
+                0
+            );
+        }
+
+        // =========================================
+        // LOCKER SEED
+        // =========================================
+
+        public async Task
+            EnsureLockersAsync()
+        {
+            /*
+                Lockers are stored as Assets so they
+                still belong to the SmartOffice
+                resource model.
+
+                50 lockers on Floor 15
+                50 lockers on Floor 16
+            */
+
+            var existingLockerNames =
+                await _assets
+                    .Find(
+                        asset =>
+                            asset.Category ==
+                            "Locker"
+                    )
+                    .Project(
+                        asset =>
+                            asset.Name
+                    )
+                    .ToListAsync();
+
+            var existingNames =
+                new HashSet<string>(
+                    existingLockerNames,
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            var lockersToCreate =
+                new List<Asset>();
+
+            foreach (
+                var floorNumber
+                in new[]
+                {
+                    15,
+                    16
+                }
+            )
+            {
+                for (
+                    var lockerNumber = 1;
+                    lockerNumber <= 50;
+                    lockerNumber++
+                )
+                {
+                    var lockerName =
+                        $"L{floorNumber}-{lockerNumber:D3}";
+
+                    if (
+                        existingNames.Contains(
+                            lockerName
+                        )
+                    )
+                    {
+                        continue;
+                    }
+
+                    lockersToCreate.Add(
+                        new Asset
+                        {
+                            Name =
+                                lockerName,
+
+                            Type =
+                                "Shared Resource",
+
+                            Category =
+                                "Locker",
+
+                            Location =
+                                $"Floor {floorNumber}",
+
+                            Description =
+                                "Employee locker with physical key.",
+
+                            Features =
+                                new List<string>
+                                {
+                                    "Secure Storage",
+                                    "Key Required"
+                                },
+
+                            Status =
+                                "Available",
+
+                            CreatedAt =
+                                DateTime.UtcNow
+                        }
+                    );
+                }
+            }
+
+            if (
+                lockersToCreate.Count >
+                0
+            )
+            {
+                await _assets
+                    .InsertManyAsync(
+                        lockersToCreate
+                    );
+            }
+        }
+
+        // =========================================
+        // LOCKERS
+        // =========================================
+
+        public async Task<List<Asset>>
+            GetLockersAsync()
+        {
+            return await _assets
+                .Find(
+                    asset =>
+                        asset.Category ==
+                        "Locker"
+                )
+                .SortBy(
+                    asset =>
+                        asset.Location
+                )
+                .ThenBy(
+                    asset =>
+                        asset.Name
+                )
+                .ToListAsync();
+        }
+
+        public async Task<Asset?>
+            GetLockerByIdAsync(
+                string id
+            )
+        {
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
+            {
+                return null;
+            }
+
+            return await _assets
+                .Find(
+                    asset =>
+                        asset.Id == id &&
+                        asset.Category ==
+                        "Locker"
+                )
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Asset?>
+            UpdateLockerOperationalStatusAsync(
+                string id,
+                string status
+            )
+        {
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
+            {
+                return null;
+            }
+
+            var update =
+                Builders<Asset>
+                    .Update
+                    .Set(
+                        asset =>
+                            asset.Status,
+                        status
+                    );
+
+            var options =
+                new FindOneAndUpdateOptions<
+                    Asset,
+                    Asset
+                >
+                {
+                    ReturnDocument =
+                        ReturnDocument.After
+                };
+
+            return await _assets
+                .FindOneAndUpdateAsync(
+                    asset =>
+                        asset.Id == id &&
+                        asset.Category ==
+                        "Locker",
+
+                    update,
+
+                    options
+                );
+        }
+
+        // =========================================
+        // LOCKER REQUESTS
+        // =========================================
+
+        public async Task<LockerRequest?>
+            GetLockerRequestByIdAsync(
+                string id
+            )
+        {
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
+            {
+                return null;
+            }
+
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.Id ==
+                        id
+                )
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<LockerRequest?>
+            GetActiveLockerRequestForLockerAsync(
+                string lockerId
+            )
+        {
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.LockerId ==
+                            lockerId &&
+                        request.IsActive
+                )
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<LockerRequest?>
+            GetActiveLockerRequestForUserAsync(
+                string userId
+            )
+        {
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.RequestedByUserId ==
+                            userId &&
+                        request.IsActive
+                )
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<LockerRequest>>
+            GetActiveLockerRequestsAsync()
+        {
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.IsActive
+                )
+                .SortBy(
+                    request =>
+                        request.RequestedAtUtc
+                )
+                .ToListAsync();
+        }
+
+        public async Task<List<LockerRequest>>
+            GetLockerRequestsForUserAsync(
+                string userId
+            )
+        {
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.RequestedByUserId ==
+                        userId
+                )
+                .SortByDescending(
+                    request =>
+                        request.RequestedAtUtc
+                )
+                .ToListAsync();
+        }
+
+        public async Task<List<LockerRequest>>
+            GetPendingLockerRequestsAsync()
+        {
+            return await _lockerRequests
+                .Find(
+                    request =>
+                        request.Status ==
+                            "Pending" &&
+                        request.IsActive
+                )
+                .SortBy(
+                    request =>
+                        request.RequestedAtUtc
+                )
+                .ToListAsync();
+        }
+
+        public async Task<LockerRequest>
+            CreateLockerRequestAsync(
+                LockerRequest request
+            )
+        {
+            request.Status =
+                "Pending";
+
+            request.IsActive =
+                true;
+
+            request.RequestedAtUtc =
+                DateTime.UtcNow;
+
+            await _lockerRequests
+                .InsertOneAsync(
+                    request
+                );
+
+            return request;
+        }
+
+        public async Task<LockerRequest?>
+            ApproveLockerRequestAsync(
+                string id,
+                string reviewerUserId,
+                string reviewerName
+            )
+        {
+            var update =
+                Builders<LockerRequest>
+                    .Update
+                    .Set(
+                        request =>
+                            request.Status,
+                        "Approved"
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedByUserId,
+                        reviewerUserId
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedBy,
+                        reviewerName
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedAtUtc,
+                        DateTime.UtcNow
+                    );
+
+            return await UpdateLockerRequestAsync(
+                id,
+                update
+            );
+        }
+
+        public async Task<LockerRequest?>
+            RejectLockerRequestAsync(
+                string id,
+                string reviewerUserId,
+                string reviewerName
+            )
+        {
+            var update =
+                Builders<LockerRequest>
+                    .Update
+                    .Set(
+                        request =>
+                            request.Status,
+                        "Rejected"
+                    )
+                    .Set(
+                        request =>
+                            request.IsActive,
+                        false
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedByUserId,
+                        reviewerUserId
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedBy,
+                        reviewerName
+                    )
+                    .Set(
+                        request =>
+                            request.ReviewedAtUtc,
+                        DateTime.UtcNow
+                    );
+
+            return await UpdateLockerRequestAsync(
+                id,
+                update
+            );
+        }
+
+        public async Task<LockerRequest?>
+            MarkLockerKeyCollectedAsync(
+                string id
+            )
+        {
+            var update =
+                Builders<LockerRequest>
+                    .Update
+                    .Set(
+                        request =>
+                            request.Status,
+                        "Collected"
+                    )
+                    .Set(
+                        request =>
+                            request.KeyCollectedAtUtc,
+                        DateTime.UtcNow
+                    );
+
+            return await UpdateLockerRequestAsync(
+                id,
+                update
+            );
+        }
+
+        public async Task<LockerRequest?>
+            MarkLockerReturnedAsync(
+                string id
+            )
+        {
+            var update =
+                Builders<LockerRequest>
+                    .Update
+                    .Set(
+                        request =>
+                            request.Status,
+                        "Returned"
+                    )
+                    .Set(
+                        request =>
+                            request.IsActive,
+                        false
+                    )
+                    .Set(
+                        request =>
+                            request.ReturnedAtUtc,
+                        DateTime.UtcNow
+                    );
+
+            return await UpdateLockerRequestAsync(
+                id,
+                update
+            );
+        }
+
+        public async Task<LockerRequest?>
+            CancelLockerRequestAsync(
+                string id
+            )
+        {
+            var update =
+                Builders<LockerRequest>
+                    .Update
+                    .Set(
+                        request =>
+                            request.Status,
+                        "Cancelled"
+                    )
+                    .Set(
+                        request =>
+                            request.IsActive,
+                        false
+                    )
+                    .Set(
+                        request =>
+                            request.CancelledAtUtc,
+                        DateTime.UtcNow
+                    );
+
+            return await UpdateLockerRequestAsync(
+                id,
+                update
+            );
+        }
+
+        private async Task<LockerRequest?>
+            UpdateLockerRequestAsync(
+                string id,
+                UpdateDefinition<LockerRequest> update
+            )
+        {
+            if (
+                !ObjectId.TryParse(
+                    id,
+                    out _
+                )
+            )
+            {
+                return null;
+            }
+
+            var options =
+                new FindOneAndUpdateOptions<
+                    LockerRequest,
+                    LockerRequest
+                >
+                {
+                    ReturnDocument =
+                        ReturnDocument.After
+                };
+
+            return await _lockerRequests
+                .FindOneAndUpdateAsync(
+                    request =>
+                        request.Id ==
+                        id,
+
+                    update,
+
+                    options
+                );
         }
     }
 }

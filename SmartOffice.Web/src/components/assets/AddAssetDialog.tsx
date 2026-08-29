@@ -1,10 +1,19 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
+import type {
+  ReactNode,
+} from 'react'
 
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,10 +23,19 @@ import {
   Typography,
 } from '@mui/material'
 
-import AddIcon from '@mui/icons-material/Add'
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import DeskOutlinedIcon from '@mui/icons-material/DeskOutlined'
+import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
 
-import { assetStore } from '../../stores/AssetStore'
+import {
+  assetStore,
+} from '../../stores/AssetStore'
+
 import RoomCreature from '../RoomCreature'
 
 interface AddAssetDialogProps {
@@ -25,7 +43,26 @@ interface AddAssetDialogProps {
   onClose: () => void
 }
 
-const meetingRooms = [
+type ResourceType =
+  | 'Room'
+  | 'Desk'
+  | 'Equipment'
+  | 'Shared Resource'
+
+interface ResourceConfiguration {
+  categories: string[]
+  features: string[]
+  examples: string[]
+  description: string
+}
+
+interface ResourceTypeOption {
+  value: ResourceType
+  label: string
+  icon: ReactNode
+}
+
+const ROOM_NAMES = [
   'Butterfly',
   'Beetle',
   'Ladybug',
@@ -36,161 +73,498 @@ const meetingRooms = [
   'Mantis',
 ]
 
+const RESOURCE_CONFIG: Record<
+  ResourceType,
+  ResourceConfiguration
+> = {
+  Room: {
+    categories: [
+      'Meeting Room',
+      'Conference Room',
+      'Focus Room',
+      'Collaboration Room',
+    ],
+
+    features: [
+      'TV Screen',
+      'Video Conferencing',
+      'Whiteboard',
+      'HDMI',
+      'USB-C',
+      'Speakerphone',
+      'Natural Light',
+      'Soundproof',
+    ],
+
+    examples: [
+      'Butterfly',
+      'Ladybug',
+      'Dragonfly',
+    ],
+
+    description:
+      'Shared meeting space that employees can reserve by time slot.',
+  },
+
+  Desk: {
+    categories: [
+      'Standard Desk',
+      'Standing Desk',
+      'Dual Monitor Desk',
+      'Window Desk',
+      'Focus Desk',
+    ],
+
+    features: [
+      '1 Monitor',
+      '2 Monitors',
+      'USB-C Dock',
+      'Adjustable Height',
+      'Ergonomic Chair',
+      'Keyboard & Mouse',
+      'Natural Light',
+      'Privacy Screen',
+    ],
+
+    examples: [
+      'Desk 15-A01',
+      'Desk 15-B04',
+      'Desk 16-C02',
+    ],
+
+    description:
+      'Employee workstation with equipment and workspace characteristics.',
+  },
+
+  Equipment: {
+    categories: [
+      'Headset',
+      'Webcam',
+      'Docking Station',
+      'Portable Monitor',
+      'Presentation Kit',
+      'Keyboard & Mouse',
+    ],
+
+    features: [
+      'Bluetooth',
+      'Noise Cancelling',
+      'USB-C',
+      'Wireless',
+      '4K',
+      'HDMI',
+      'Portable',
+      'Rechargeable',
+    ],
+
+    examples: [
+      'Jabra Evolve2 65',
+      'Logitech Brio Webcam',
+      'Dell USB-C Dock',
+    ],
+
+    description:
+      'Shared office equipment available for employee use.',
+  },
+
+  'Shared Resource': {
+    categories: [
+      'Locker',
+      'Printer Station',
+      'Parking Spot',
+      'Storage Cabinet',
+      'Visitor Kit',
+    ],
+
+    features: [
+      'Secure Storage',
+      'Personal Use',
+      'Color Printing',
+      'Scanner',
+      'Reserved',
+      'Accessible',
+      'Daily Use',
+      'Lockable',
+    ],
+
+    examples: [
+      'Locker 15-08',
+      'Printer Station 16-A',
+      'Parking Spot P-12',
+    ],
+
+    description:
+      'Shared workplace facility used by employees across the office.',
+  },
+}
+
+const RESOURCE_TYPES: ResourceTypeOption[] = [
+  {
+    value: 'Desk',
+    label: 'Desk',
+    icon: <DeskOutlinedIcon />,
+  },
+  {
+    value: 'Room',
+    label: 'Room',
+    icon: <MeetingRoomOutlinedIcon />,
+  },
+  {
+    value: 'Equipment',
+    label: 'Equipment',
+    icon: <DevicesOutlinedIcon />,
+  },
+  {
+    value: 'Shared Resource',
+    label: 'Shared',
+    icon: <Inventory2OutlinedIcon />,
+  },
+]
+
 function AddAssetDialog({
   open,
   onClose,
 }: AddAssetDialogProps) {
-  const [name, setName] = useState('')
-  const [type, setType] = useState('Desk')
-  const [location, setLocation] =
-    useState('Floor 15')
+  const [
+    name,
+    setName,
+  ] = useState('')
 
-  const [status, setStatus] =
-    useState('Available')
+  const [
+    type,
+    setType,
+  ] = useState<ResourceType>(
+    'Desk'
+  )
+
+  const [
+    category,
+    setCategory,
+  ] = useState(
+    'Standard Desk'
+  )
+
+  const [
+    location,
+    setLocation,
+  ] = useState(
+    'Floor 15'
+  )
+
+  const [
+    description,
+    setDescription,
+  ] = useState('')
+
+  const [
+    features,
+    setFeatures,
+  ] = useState<string[]>(
+    []
+  )
+
+  const [
+    status,
+    setStatus,
+  ] = useState(
+    'Available'
+  )
+
+  const [
+    localError,
+    setLocalError,
+  ] = useState('')
+
+  const [
+    success,
+    setSuccess,
+  ] = useState(false)
+
+  const currentConfig =
+    useMemo(
+      () =>
+        RESOURCE_CONFIG[
+          type
+        ],
+      [type]
+    )
 
   const resetForm = () => {
     setName('')
+
     setType('Desk')
-    setLocation('Floor 15')
-    setStatus('Available')
+
+    setCategory(
+      'Standard Desk'
+    )
+
+    setLocation(
+      'Floor 15'
+    )
+
+    setDescription('')
+
+    setFeatures([])
+
+    setStatus(
+      'Available'
+    )
+
+    setLocalError('')
+
+    setSuccess(false)
+
+    assetStore.error = ''
   }
+
+  useEffect(() => {
+    if (open) {
+      resetForm()
+    }
+  }, [open])
 
   const handleTypeChange = (
-    newType: string
+    newType: ResourceType
   ) => {
-    setType(newType)
+    setType(
+      newType
+    )
 
-    if (newType === 'Room') {
-      setName('Butterfly')
+    setCategory(
+      RESOURCE_CONFIG[
+        newType
+      ].categories[0]
+    )
 
-      /*
-        Meeting Room availability is managed
-        automatically by reservations.
-      */
+    setFeatures([])
 
-      setStatus('Available')
-    } else {
+    setDescription('')
+
+    setStatus(
+      'Available'
+    )
+
+    if (
+      newType === 'Room'
+    ) {
+      if (
+        !ROOM_NAMES.includes(
+          name
+        )
+      ) {
+        setName(
+          'Butterfly'
+        )
+      }
+    } else if (
+      ROOM_NAMES.includes(
+        name
+      )
+    ) {
       setName('')
-      setStatus('Available')
     }
   }
 
-  const handleClose = () => {
-    if (assetStore.loading) {
-      return
+  const handleSubmit =
+    async () => {
+      setLocalError('')
+
+      setSuccess(false)
+
+      assetStore.error = ''
+
+      const cleanName =
+        name.trim()
+
+      const cleanDescription =
+        description.trim()
+
+      if (!cleanName) {
+        setLocalError(
+          'Resource name is required.'
+        )
+
+        return
+      }
+
+      if (!category) {
+        setLocalError(
+          'Please select a category.'
+        )
+
+        return
+      }
+
+      try {
+        await assetStore
+          .createAsset({
+            name:
+              cleanName,
+
+            type,
+
+            category,
+
+            location,
+
+            description:
+              cleanDescription,
+
+            features:
+              features
+                .map(
+                  (feature) =>
+                    feature.trim()
+                )
+                .filter(
+                  Boolean
+                ),
+
+            status:
+              type === 'Room'
+                ? 'Available'
+                : status,
+          })
+
+        setSuccess(
+          true
+        )
+
+        window.setTimeout(
+          () => {
+            resetForm()
+
+            onClose()
+          },
+          800
+        )
+      } catch {
+        // AssetStore exposes API errors.
+      }
     }
 
-    resetForm()
-    onClose()
-  }
-
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault()
-
-    try {
-      await assetStore.createAsset({
-        name,
-        type,
-        location,
-
-        status:
-          type === 'Room'
-            ? 'Available'
-            : status,
-      })
+  const handleClose =
+    () => {
+      if (
+        assetStore.loading
+      ) {
+        return
+      }
 
       resetForm()
+
       onClose()
-    } catch {
-      // AssetStore already exposes the API error.
     }
-  }
 
-  const fieldStyle = {
-    '& .MuiInputLabel-root': {
-      color: '#7c808d',
-    },
+  const renderTypeIcon =
+    () => {
+      switch (type) {
+        case 'Room':
+          return (
+            <MeetingRoomOutlinedIcon />
+          )
 
-    '& .MuiInputLabel-root.Mui-focused':
+        case 'Desk':
+          return (
+            <DeskOutlinedIcon />
+          )
+
+        case 'Equipment':
+          return (
+            <DevicesOutlinedIcon />
+          )
+
+        default:
+          return (
+            <Inventory2OutlinedIcon />
+          )
+      }
+    }
+
+  const fieldSx = {
+    '& .MuiOutlinedInput-root':
       {
-        color: '#159f99',
+        borderRadius:
+          '13px',
+
+        backgroundColor:
+          '#ffffff',
+
+        '& fieldset': {
+          borderColor:
+            '#e4e7e2',
+        },
+
+        '&:hover fieldset':
+          {
+            borderColor:
+              'rgba(24,170,163,.42)',
+          },
+
+        '&.Mui-focused fieldset':
+          {
+            borderColor:
+              '#78c948',
+          },
       },
-
-    '& .MuiOutlinedInput-root': {
-      color: '#202337',
-
-      borderRadius: '14px',
-
-      backgroundColor: '#ffffff',
-
-      '& fieldset': {
-        borderColor: '#e3e7e2',
-      },
-
-      '&:hover fieldset': {
-        borderColor:
-          'rgba(24,170,163,.45)',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#78c948',
-      },
-    },
-
-    '& .MuiSelect-icon': {
-      color: '#159f99',
-    },
   }
 
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+
+      onClose={
+        handleClose
+      }
+
       fullWidth
+
       maxWidth="sm"
+
       slotProps={{
         paper: {
           sx: {
-            position: 'relative',
+            position:
+              'relative',
 
             width: '100%',
 
             maxHeight:
-              'calc(100dvh - 32px)',
+              'calc(100dvh - 28px)',
 
             display: 'flex',
 
-            flexDirection: 'column',
+            flexDirection:
+              'column',
 
-            overflow: 'hidden',
+            overflow:
+              'hidden',
 
-            borderRadius: '26px',
-
-            color: '#202337',
-
-            background:
-              'linear-gradient(145deg, #ffffff, #fafcf9)',
+            borderRadius:
+              '26px',
 
             border:
               '1px solid #e5e9e3',
 
+            background:
+              'linear-gradient(145deg, #ffffff 0%, #fbfdf9 100%)',
+
             boxShadow:
-              '0 38px 110px rgba(23,24,44,.20)',
+              '0 38px 110px rgba(23,24,44,.22)',
 
             '&::before': {
               content: '""',
 
-              position: 'absolute',
+              position:
+                'absolute',
 
               top: 0,
               left: 0,
               right: 0,
 
-              height: '5px',
+              height: 5,
 
-              zIndex: 10,
+              zIndex: 20,
 
               background:
                 'linear-gradient(90deg, #78c948 0%, #78c948 45%, #18aaa3 100%)',
@@ -201,487 +575,1142 @@ function AddAssetDialog({
         backdrop: {
           sx: {
             backgroundColor:
-              'rgba(23,24,44,.28)',
+              'rgba(23,24,44,.30)',
 
-            backdropFilter: 'blur(7px)',
+            backdropFilter:
+              'blur(8px)',
           },
         },
       }}
     >
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
+      {/* HEADER */}
+
+      <DialogTitle
+        sx={{
+          flexShrink: 0,
+
+          padding: 3,
+
+          paddingBottom: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+
+            alignItems:
+              'center',
+
+            justifyContent:
+              'space-between',
+
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+
+              alignItems:
+                'center',
+
+              gap: 1.3,
+            }}
+          >
+            <Box
+              sx={{
+                width: 46,
+
+                height: 46,
+
+                display:
+                  'flex',
+
+                alignItems:
+                  'center',
+
+                justifyContent:
+                  'center',
+
+                borderRadius:
+                  '14px',
+
+                color:
+                  '#159f99',
+
+                background:
+                  'linear-gradient(135deg, rgba(120,201,72,.12), rgba(24,170,163,.10))',
+              }}
+            >
+              {renderTypeIcon()}
+            </Box>
+
+            <Box>
+              <Typography
+                sx={{
+                  color:
+                    '#159f99',
+
+                  fontSize:
+                    '0.64rem',
+
+                  fontWeight:
+                    900,
+
+                  letterSpacing:
+                    '0.15em',
+
+                  textTransform:
+                    'uppercase',
+                }}
+              >
+                Resource Management
+              </Typography>
+
+              <Typography
+                sx={{
+                  marginTop:
+                    0.2,
+
+                  color:
+                    '#202337',
+
+                  fontSize:
+                    '1.55rem',
+
+                  fontWeight:
+                    900,
+
+                  letterSpacing:
+                    '-0.04em',
+                }}
+              >
+                Add Resource
+              </Typography>
+            </Box>
+          </Box>
+
+          <Button
+            onClick={
+              handleClose
+            }
+
+            disabled={
+              assetStore.loading
+            }
+
+            sx={{
+              minWidth: 40,
+
+              width: 40,
+
+              height: 40,
+
+              padding: 0,
+
+              borderRadius:
+                '12px',
+
+              color:
+                '#8a8e99',
+
+              backgroundColor:
+                '#f5f6f4',
+            }}
+          >
+            <CloseOutlinedIcon />
+          </Button>
+        </Box>
+      </DialogTitle>
+
+      {/* CONTENT */}
+
+      <DialogContent
         sx={{
           flex: 1,
 
           minHeight: 0,
 
-          display: 'flex',
+          overflowY:
+            'auto',
 
-          flexDirection: 'column',
+          paddingX: 3,
 
-          overflow: 'hidden',
-        }}
-      >
-        {/* HEADER */}
+          paddingTop:
+            '6px !important',
 
-        <DialogTitle
-          sx={{
-            flexShrink: 0,
+          paddingBottom: 3,
 
-            padding: 3,
-
-            paddingBottom: 1.5,
-
-            backgroundColor:
-              'rgba(255,255,255,.98)',
-          }}
-        >
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-
-              marginBottom: 1.5,
-
-              borderRadius: '14px',
-
-              display: 'flex',
-
-              alignItems: 'center',
-
-              justifyContent: 'center',
-
-              color: '#58ad35',
-
-              backgroundColor:
-                'rgba(120,201,72,.11)',
-            }}
-          >
-            <MeetingRoomOutlinedIcon />
-          </Box>
-
-          <Typography
-            sx={{
-              color: '#159f99',
-
-              fontSize: '0.67rem',
-
-              fontWeight: 900,
-
-              letterSpacing: '0.15em',
-
-              textTransform: 'uppercase',
-            }}
-          >
-            Aristocrat Smart Office
-          </Typography>
-
-          <Typography
-            sx={{
-              marginTop: 0.4,
-
-              color: '#202337',
-
-              fontSize: '1.65rem',
-
-              fontWeight: 900,
-
-              letterSpacing: '-0.035em',
-            }}
-          >
-            Add new resource
-          </Typography>
-
-          <Typography
-            sx={{
-              marginTop: 0.6,
-
-              color: '#90939e',
-
-              fontSize: '0.85rem',
-            }}
-          >
-            Register a new workplace resource.
-          </Typography>
-        </DialogTitle>
-
-        {/* CONTENT */}
-
-        <DialogContent
-          sx={{
-            flex: 1,
-
-            minHeight: 0,
-
-            overflowY: 'auto',
-
-            overflowX: 'hidden',
-
-            padding: 3,
-
-            paddingTop: 2.5,
-
-            paddingBottom: 3,
-
-            borderTop:
-              '1px solid #edf0eb',
-
-            borderBottom:
-              '1px solid #edf0eb',
-
-            overscrollBehavior: 'contain',
-
-            '&::-webkit-scrollbar': {
+          '&::-webkit-scrollbar':
+            {
               width: 8,
             },
 
-            '&::-webkit-scrollbar-track': {
-              backgroundColor: '#f5f7f4',
-
-              borderRadius: 20,
-            },
-
-            '&::-webkit-scrollbar-thumb': {
-              borderRadius: 20,
+          '&::-webkit-scrollbar-thumb':
+            {
+              borderRadius:
+                20,
 
               background:
                 'linear-gradient(180deg, #78c948, #18aaa3)',
-
-              border:
-                '2px solid #f5f7f4',
             },
-          }}
-        >
-          {assetStore.error && (
-            <Alert
-              severity="error"
-              sx={{
-                marginBottom: 2,
+        }}
+      >
+        {(localError ||
+          assetStore.error) && (
+          <Alert
+            severity="error"
 
-                borderRadius: '13px',
-              }}
-            >
-              {assetStore.error}
-            </Alert>
-          )}
-
-          <Box
             sx={{
-              display: 'grid',
+              marginBottom:
+                2,
 
-              gap: 2,
+              borderRadius:
+                '13px',
             }}
           >
-            {/* RESOURCE TYPE */}
+            {localError ||
+              assetStore.error}
+          </Alert>
+        )}
 
-            <TextField
-              select
-              label="Resource type"
-              value={type}
-              onChange={(event) =>
-                handleTypeChange(
-                  event.target.value
-                )
-              }
-              fullWidth
-              sx={fieldStyle}
-            >
-              <MenuItem value="Desk">
-                Desk
-              </MenuItem>
+        {success && (
+          <Alert
+            severity="success"
 
-              <MenuItem value="Room">
-                Meeting Room
-              </MenuItem>
+            sx={{
+              marginBottom:
+                2,
 
-              <MenuItem value="Equipment">
-                Equipment
-              </MenuItem>
+              borderRadius:
+                '13px',
+            }}
+          >
+            Resource added successfully.
+          </Alert>
+        )}
 
-              <MenuItem value="Other">
-                Other
-              </MenuItem>
-            </TextField>
+        {/* RESOURCE TYPE */}
 
-            {/* NAME */}
-
-            {type === 'Room' ? (
-              <Box>
-                <TextField
-                  select
-                  label="Meeting room"
-                  value={name}
-                  onChange={(event) =>
-                    setName(
-                      event.target.value
-                    )
-                  }
-                  required
-                  fullWidth
-                  sx={fieldStyle}
-                >
-                  {meetingRooms.map(
-                    (room) => (
-                      <MenuItem
-                        key={room}
-                        value={room}
-                      >
-                        {room}
-                      </MenuItem>
-                    )
-                  )}
-                </TextField>
-
-                {name && (
-                  <Box
-                    sx={{
-                      marginTop: 1.5,
-
-                      padding: 1.5,
-
-                      borderRadius: '15px',
-
-                      display: 'flex',
-
-                      alignItems: 'center',
-
-                      gap: 1.3,
-
-                      background:
-                        'linear-gradient(100deg, rgba(120,201,72,.07), rgba(24,170,163,.06))',
-
-                      border:
-                        '1px solid rgba(120,201,72,.12)',
-                    }}
-                  >
-                    <RoomCreature
-                      roomName={name}
-                      size={48}
-                    />
-
-                    <Box>
-                      <Typography
-                        sx={{
-                          color: '#202337',
-
-                          fontSize: '0.86rem',
-
-                          fontWeight: 900,
-                        }}
-                      >
-                        {name}
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          marginTop: 0.1,
-
-                          color: '#9295a0',
-
-                          fontSize: '0.72rem',
-                        }}
-                      >
-                        Aristocrat Meeting Room
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            ) : (
-              <TextField
-                label="Resource name"
-                value={name}
-                onChange={(event) =>
-                  setName(
-                    event.target.value
-                  )
-                }
-                placeholder={
-                  type === 'Desk'
-                    ? 'e.g. Desk 101'
-                    : 'Enter resource name'
-                }
-                required
-                fullWidth
-                sx={fieldStyle}
-              />
-            )}
-
-            {/* FLOOR */}
-
-            <TextField
-              select
-              label="Floor"
-              value={location}
-              onChange={(event) =>
-                setLocation(
-                  event.target.value
-                )
-              }
-              required
-              fullWidth
-              sx={fieldStyle}
-            >
-              <MenuItem value="Floor 15">
-                Floor 15
-              </MenuItem>
-
-              <MenuItem value="Floor 16">
-                Floor 16
-              </MenuItem>
-            </TextField>
-
-            {/* STATUS FOR NON-ROOM RESOURCES */}
-
-            {type !== 'Room' && (
-              <TextField
-                select
-                label="Status"
-                value={status}
-                onChange={(event) =>
-                  setStatus(
-                    event.target.value
-                  )
-                }
-                fullWidth
-                sx={fieldStyle}
-              >
-                <MenuItem value="Available">
-                  Available
-                </MenuItem>
-
-                <MenuItem value="In Use">
-                  In Use
-                </MenuItem>
-
-                <MenuItem value="Maintenance">
-                  Maintenance
-                </MenuItem>
-              </TextField>
-            )}
-
-            {/* ROOM STATUS INFO */}
-
-            {type === 'Room' && (
-              <Box
-                sx={{
-                  padding: 1.5,
-
-                  borderRadius: '14px',
-
-                  background:
-                    'linear-gradient(100deg, rgba(120,201,72,.07), rgba(24,170,163,.05))',
-
-                  border:
-                    '1px solid rgba(120,201,72,.15)',
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: '#4b9932',
-
-                    fontSize: '0.72rem',
-
-                    fontWeight: 900,
-                  }}
-                >
-                  Room availability is automatic
-                </Typography>
-
-                <Typography
-                  sx={{
-                    marginTop: 0.35,
-
-                    color: '#858996',
-
-                    fontSize: '0.72rem',
-
-                    lineHeight: 1.55,
-                  }}
-                >
-                  The room will start as Available.
-                  In Use status is calculated from
-                  active reservations.
-                </Typography>
-              </Box>
-            )}
-
-            <Box sx={{ height: 2 }} />
-          </Box>
-        </DialogContent>
-
-        {/* ACTIONS */}
-
-        <DialogActions
+        <Typography
           sx={{
-            flexShrink: 0,
+            marginBottom:
+              0.7,
 
-            paddingX: 3,
+            color:
+              '#555968',
 
-            paddingY: 2,
+            fontSize:
+              '0.68rem',
+
+            fontWeight:
+              900,
+
+            letterSpacing:
+              '0.08em',
+          }}
+        >
+          RESOURCE TYPE
+        </Typography>
+
+        <Box
+          sx={{
+            display: 'grid',
+
+            gridTemplateColumns:
+              {
+                xs:
+                  'repeat(2, 1fr)',
+
+                sm:
+                  'repeat(4, 1fr)',
+              },
 
             gap: 1,
 
-            backgroundColor:
-              'rgba(255,255,255,.99)',
-
-            boxShadow:
-              '0 -10px 30px rgba(23,24,44,.035)',
+            marginBottom:
+              2.2,
           }}
         >
-          <Button
-            onClick={handleClose}
-            disabled={assetStore.loading}
+          {RESOURCE_TYPES.map(
+            (
+              option
+            ) => {
+              const selected =
+                type ===
+                option.value
+
+              return (
+                <Button
+                  key={
+                    option.value
+                  }
+
+                  onClick={() =>
+                    handleTypeChange(
+                      option.value
+                    )
+                  }
+
+                  startIcon={
+                    option.icon
+                  }
+
+                  sx={{
+                    minHeight:
+                      50,
+
+                    paddingX:
+                      1,
+
+                    borderRadius:
+                      '13px',
+
+                    color:
+                      selected
+                        ? '#ffffff'
+                        : '#656a78',
+
+                    border:
+                      selected
+                        ? '1px solid transparent'
+                        : '1px solid #e6e9e4',
+
+                    background:
+                      selected
+                        ? 'linear-gradient(100deg, #58ad35, #18aaa3)'
+                        : '#ffffff',
+
+                    textTransform:
+                      'none',
+
+                    fontSize:
+                      '0.7rem',
+
+                    fontWeight:
+                      900,
+
+                    boxShadow:
+                      selected
+                        ? '0 9px 23px rgba(24,170,163,.18)'
+                        : 'none',
+
+                    '&:hover':
+                      {
+                        background:
+                          selected
+                            ? 'linear-gradient(100deg, #4e9e31, #159b96)'
+                            : '#f8faf7',
+                      },
+                  }}
+                >
+                  {
+                    option.label
+                  }
+                </Button>
+              )
+            }
+          )}
+        </Box>
+
+        {/* TYPE EXPLANATION */}
+
+        <Box
+          sx={{
+            marginBottom:
+              2,
+
+            padding: 1.5,
+
+            borderRadius:
+              '14px',
+
+            display: 'flex',
+
+            alignItems:
+              'flex-start',
+
+            gap: 1,
+
+            background:
+              'linear-gradient(100deg, rgba(120,201,72,.07), rgba(24,170,163,.055))',
+
+            border:
+              '1px solid rgba(120,201,72,.15)',
+          }}
+        >
+          <AutoAwesomeOutlinedIcon
             sx={{
-              color: '#7d8190',
+              marginTop:
+                0.15,
 
-              borderRadius: '11px',
+              color:
+                '#58ad35',
 
-              textTransform: 'none',
+              fontSize: 19,
+            }}
+          />
 
-              fontWeight: 700,
+          <Box>
+            <Typography
+              sx={{
+                color:
+                  '#202337',
+
+                fontSize:
+                  '0.73rem',
+
+                fontWeight:
+                  900,
+              }}
+            >
+              {type}
+            </Typography>
+
+            <Typography
+              sx={{
+                marginTop:
+                  0.2,
+
+                color:
+                  '#858995',
+
+                fontSize:
+                  '0.68rem',
+
+                lineHeight:
+                  1.5,
+              }}
+            >
+              {
+                currentConfig.description
+              }
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* RESOURCE NAME */}
+
+        <Typography
+          sx={{
+            marginBottom:
+              0.6,
+
+            color:
+              '#555968',
+
+            fontSize:
+              '0.68rem',
+
+            fontWeight:
+              900,
+
+            letterSpacing:
+              '0.08em',
+          }}
+        >
+          RESOURCE NAME
+        </Typography>
+
+        {type ===
+        'Room' ? (
+          <TextField
+            select
+
+            fullWidth
+
+            value={name}
+
+            onChange={(
+              event
+            ) =>
+              setName(
+                event.target
+                  .value
+              )
+            }
+
+            sx={{
+              ...fieldSx,
+
+              marginBottom:
+                0.8,
             }}
           >
-            Cancel
-          </Button>
+            {ROOM_NAMES.map(
+              (
+                roomName
+              ) => (
+                <MenuItem
+                  key={
+                    roomName
+                  }
 
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<AddIcon />}
-            disabled={assetStore.loading}
+                  value={
+                    roomName
+                  }
+                >
+                  <Box
+                    sx={{
+                      display:
+                        'flex',
+
+                      alignItems:
+                        'center',
+
+                      gap: 1,
+                    }}
+                  >
+                    <RoomCreature
+                      roomName={
+                        roomName
+                      }
+
+                      size={30}
+                    />
+
+                    <Typography
+                      sx={{
+                        fontWeight:
+                          800,
+                      }}
+                    >
+                      {
+                        roomName
+                      }
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              )
+            )}
+          </TextField>
+        ) : (
+          <TextField
+            fullWidth
+
+            value={name}
+
+            onChange={(
+              event
+            ) =>
+              setName(
+                event.target
+                  .value
+              )
+            }
+
+            placeholder={
+              currentConfig
+                .examples[0]
+            }
+
             sx={{
-              minWidth: 150,
+              ...fieldSx,
 
-              minHeight: 44,
+              marginBottom:
+                0.8,
+            }}
+          />
+        )}
 
-              borderRadius: '12px',
+        <Typography
+          sx={{
+            marginBottom:
+              2,
 
-              color: '#182012',
+            color:
+              '#a0a3ad',
 
-              textTransform: 'none',
+            fontSize:
+              '0.64rem',
+          }}
+        >
+          Examples:{' '}
+          {currentConfig.examples.join(
+            ' • '
+          )}
+        </Typography>
 
-              fontWeight: 900,
+        {/* CATEGORY / FLOOR */}
 
-              background:
-                'linear-gradient(100deg, #78c948, #8bd65b)',
+        <Box
+          sx={{
+            display: 'grid',
 
-              boxShadow:
-                '0 11px 26px rgba(120,201,72,.22)',
+            gridTemplateColumns:
+              {
+                xs: '1fr',
 
-              '&:hover': {
-                background:
-                  'linear-gradient(100deg, #6abd3d, #7dcb50)',
+                sm:
+                  '1fr 1fr',
               },
+
+            gap: 1.4,
+
+            marginBottom:
+              2,
+          }}
+        >
+          <Box>
+            <Typography
+              sx={{
+                marginBottom:
+                  0.6,
+
+                color:
+                  '#555968',
+
+                fontSize:
+                  '0.68rem',
+
+                fontWeight:
+                  900,
+
+                letterSpacing:
+                  '0.08em',
+              }}
+            >
+              CATEGORY
+            </Typography>
+
+            <TextField
+              select
+
+              fullWidth
+
+              value={
+                category
+              }
+
+              onChange={(
+                event
+              ) =>
+                setCategory(
+                  event.target
+                    .value
+                )
+              }
+
+              sx={fieldSx}
+            >
+              {currentConfig.categories.map(
+                (
+                  option
+                ) => (
+                  <MenuItem
+                    key={
+                      option
+                    }
+
+                    value={
+                      option
+                    }
+                  >
+                    {
+                      option
+                    }
+                  </MenuItem>
+                )
+              )}
+            </TextField>
+          </Box>
+
+          <Box>
+            <Typography
+              sx={{
+                marginBottom:
+                  0.6,
+
+                color:
+                  '#555968',
+
+                fontSize:
+                  '0.68rem',
+
+                fontWeight:
+                  900,
+
+                letterSpacing:
+                  '0.08em',
+              }}
+            >
+              FLOOR
+            </Typography>
+
+            <TextField
+              select
+
+              fullWidth
+
+              value={
+                location
+              }
+
+              onChange={(
+                event
+              ) =>
+                setLocation(
+                  event.target
+                    .value
+                )
+              }
+
+              sx={fieldSx}
+            >
+              <MenuItem value="Floor 15">
+                <Box
+                  sx={{
+                    display:
+                      'flex',
+
+                    alignItems:
+                      'center',
+
+                    gap: 0.6,
+                  }}
+                >
+                  <LocationOnOutlinedIcon
+                    sx={{
+                      fontSize:
+                        17,
+
+                      color:
+                        '#58ad35',
+                    }}
+                  />
+
+                  Floor 15
+                </Box>
+              </MenuItem>
+
+              <MenuItem value="Floor 16">
+                <Box
+                  sx={{
+                    display:
+                      'flex',
+
+                    alignItems:
+                      'center',
+
+                    gap: 0.6,
+                  }}
+                >
+                  <LocationOnOutlinedIcon
+                    sx={{
+                      fontSize:
+                        17,
+
+                      color:
+                        '#18aaa3',
+                    }}
+                  />
+
+                  Floor 16
+                </Box>
+              </MenuItem>
+            </TextField>
+          </Box>
+        </Box>
+
+        {/* DESCRIPTION */}
+
+        <Typography
+          sx={{
+            marginBottom:
+              0.6,
+
+            color:
+              '#555968',
+
+            fontSize:
+              '0.68rem',
+
+            fontWeight:
+              900,
+
+            letterSpacing:
+              '0.08em',
+          }}
+        >
+          DESCRIPTION
+        </Typography>
+
+        <TextField
+          fullWidth
+
+          multiline
+
+          minRows={2}
+
+          maxRows={4}
+
+          value={
+            description
+          }
+
+          onChange={(
+            event
+          ) =>
+            setDescription(
+              event.target
+                .value
+            )
+          }
+
+          placeholder={
+            type === 'Desk'
+              ? 'Adjustable workstation near the east windows...'
+              : type ===
+                  'Equipment'
+                ? 'Shared equipment available for employee use...'
+                : type ===
+                    'Shared Resource'
+                  ? 'Shared workplace facility...'
+                  : 'Meeting space for team collaboration...'
+          }
+
+          slotProps={{
+            htmlInput: {
+              maxLength: 300,
+            },
+          }}
+
+          sx={{
+            ...fieldSx,
+
+            marginBottom:
+              0.5,
+          }}
+        />
+
+        <Typography
+          sx={{
+            marginBottom:
+              2,
+
+            color:
+              '#a0a3ad',
+
+            fontSize:
+              '0.63rem',
+
+            textAlign:
+              'right',
+          }}
+        >
+          {
+            description.length
+          }
+          /300
+        </Typography>
+
+        {/* FEATURES */}
+
+        <Typography
+          sx={{
+            marginBottom:
+              0.6,
+
+            color:
+              '#555968',
+
+            fontSize:
+              '0.68rem',
+
+            fontWeight:
+              900,
+
+            letterSpacing:
+              '0.08em',
+          }}
+        >
+          FEATURES
+        </Typography>
+
+        <Autocomplete
+          multiple
+
+          freeSolo
+
+          options={
+            currentConfig.features
+          }
+
+          value={
+            features
+          }
+
+          onChange={(
+            _,
+            newValue
+          ) => {
+            const cleanFeatures =
+              newValue
+                .map(
+                  (feature) =>
+                    feature.trim()
+                )
+                .filter(
+                  Boolean
+                )
+
+            setFeatures(
+              cleanFeatures.slice(
+                0,
+                10
+              )
+            )
+          }}
+
+          renderInput={(
+            params
+          ) => (
+            <TextField
+              {...params}
+
+              placeholder={
+                features.length
+                  ? 'Add another feature'
+                  : 'Select or type features'
+              }
+
+              sx={
+                fieldSx
+              }
+            />
+          )}
+        />
+
+        <Typography
+          sx={{
+            marginTop:
+              0.55,
+
+            marginBottom:
+              2,
+
+            color:
+              '#a0a3ad',
+
+            fontSize:
+              '0.63rem',
+          }}
+        >
+          Choose suggestions or type your own.
+          Maximum 10 features.
+        </Typography>
+
+        {/* STATUS */}
+
+        {type !==
+          'Room' && (
+          <>
+            <Typography
+              sx={{
+                marginBottom:
+                  0.6,
+
+                color:
+                  '#555968',
+
+                fontSize:
+                  '0.68rem',
+
+                fontWeight:
+                  900,
+
+                letterSpacing:
+                  '0.08em',
+              }}
+            >
+              STATUS
+            </Typography>
+
+            <TextField
+              select
+
+              fullWidth
+
+              value={
+                status
+              }
+
+              onChange={(
+                event
+              ) =>
+                setStatus(
+                  event.target
+                    .value
+                )
+              }
+
+              sx={fieldSx}
+            >
+              <MenuItem value="Available">
+                Available
+              </MenuItem>
+
+              <MenuItem value="In Use">
+                In Use
+              </MenuItem>
+
+              <MenuItem value="Maintenance">
+                Maintenance
+              </MenuItem>
+            </TextField>
+          </>
+        )}
+
+        {/* ROOM INFO */}
+
+        {type ===
+          'Room' && (
+          <Box
+            sx={{
+              padding:
+                1.4,
+
+              borderRadius:
+                '13px',
+
+              color:
+                '#687085',
+
+              backgroundColor:
+                '#f7faf6',
+
+              border:
+                '1px solid #e4ebe1',
             }}
           >
-            {assetStore.loading
-              ? 'Adding...'
-              : 'Add Resource'}
-          </Button>
-        </DialogActions>
-      </Box>
+            <Typography
+              sx={{
+                fontSize:
+                  '0.7rem',
+
+                lineHeight:
+                  1.55,
+              }}
+            >
+              Meeting rooms start as{' '}
+              <strong>
+                Available
+              </strong>
+              . Their live{' '}
+              <strong>
+                In Use
+              </strong>{' '}
+              status is calculated
+              automatically from active
+              reservations.
+            </Typography>
+          </Box>
+        )}
+      </DialogContent>
+
+      {/* ACTIONS */}
+
+      <DialogActions
+        sx={{
+          flexShrink: 0,
+
+          paddingX: 3,
+
+          paddingY: 2,
+
+          gap: 1,
+
+          borderTop:
+            '1px solid #edf0eb',
+
+          backgroundColor:
+            '#ffffff',
+        }}
+      >
+        <Button
+          onClick={
+            handleClose
+          }
+
+          disabled={
+            assetStore.loading
+          }
+
+          sx={{
+            color:
+              '#7e828e',
+
+            borderRadius:
+              '11px',
+
+            textTransform:
+              'none',
+
+            fontWeight:
+              800,
+          }}
+        >
+          Cancel
+        </Button>
+
+        <Button
+          variant="contained"
+
+          onClick={() =>
+            void handleSubmit()
+          }
+
+          disabled={
+            assetStore.loading ||
+            success
+          }
+
+          startIcon={
+            assetStore.loading ? (
+              <CircularProgress
+                size={17}
+
+                color="inherit"
+              />
+            ) : (
+              <AddOutlinedIcon />
+            )
+          }
+
+          sx={{
+            minWidth: 150,
+
+            minHeight: 43,
+
+            borderRadius:
+              '12px',
+
+            color:
+              '#ffffff',
+
+            textTransform:
+              'none',
+
+            fontWeight:
+              900,
+
+            background:
+              'linear-gradient(100deg, #58ad35 0%, #78c948 48%, #18aaa3 110%)',
+
+            boxShadow:
+              '0 12px 28px rgba(120,201,72,.22)',
+
+            '&:hover': {
+              background:
+                'linear-gradient(100deg, #4e9e31 0%, #69bb40 48%, #159b96 110%)',
+            },
+          }}
+        >
+          {assetStore.loading
+            ? 'Adding...'
+            : 'Add Resource'}
+        </Button>
+      </DialogActions>
     </Dialog>
   )
 }

@@ -1,11 +1,7 @@
-import { useState } from 'react'
-import { observer } from 'mobx-react-lite'
-
 import {
   Box,
+  Button,
   Chip,
-  CircularProgress,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -13,702 +9,781 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material'
 
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import {
+  observer,
+} from 'mobx-react-lite'
+
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import DeskOutlinedIcon from '@mui/icons-material/DeskOutlined'
+import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 
-import { authStore } from '../../stores/AuthStore'
-import { assetStore } from '../../stores/AssetStore'
+import {
+  assetStore,
+} from '../../stores/AssetStore'
 
-const ResourcesTable = observer(() => {
-  const [deletingId, setDeletingId] =
-    useState<string | null>(null)
+import {
+  authStore,
+} from '../../stores/AuthStore'
 
-  const resources =
-    assetStore.assets.filter(
-      (asset) =>
-        asset.type !== 'Room'
+import type {
+  Asset,
+} from '../../stores/AssetStore'
+
+interface ResourcesTableProps {
+  onAddResource?: () => void
+}
+
+function isLocker(
+  asset: Asset
+) {
+  const category =
+    asset.category
+      ?.trim()
+      .toLowerCase()
+
+  const name =
+    asset.name
+      ?.trim()
+      .toLowerCase()
+
+  return (
+    category === 'locker' ||
+
+    /^l(15|16)-\d+/i.test(
+      name
+    ) ||
+
+    /^locker[\s-]/i.test(
+      name
     )
+  )
+}
 
-  const handleDelete = async (
-    id: string,
-    assetName: string
-  ) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${assetName}"?`
-    )
-
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      setDeletingId(id)
-
-      await assetStore.deleteAsset(id)
-    } catch {
-      // AssetStore already exposes the error.
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
-  const getStatusStyle = (
-    status: string
-  ) => {
-    if (status === 'Available') {
-      return {
-        color: '#3f902c',
-
-        borderColor:
-          'rgba(120,201,72,.45)',
-
-        backgroundColor:
-          'rgba(120,201,72,.11)',
-      }
-    }
-
-    if (status === 'Maintenance') {
-      return {
-        color: '#a66b14',
-
-        borderColor:
-          'rgba(224,164,68,.42)',
-
-        backgroundColor:
-          'rgba(224,164,68,.11)',
-      }
-    }
-
-    return {
-      color: '#117f7b',
-
-      borderColor:
-        'rgba(24,170,163,.38)',
-
-      backgroundColor:
-        'rgba(24,170,163,.09)',
-    }
-  }
-
-  const getAssetIcon = (
-    type: string
-  ) => {
-    if (type === 'Desk') {
-      return (
-        <DeskOutlinedIcon
-          sx={{
-            fontSize: 21,
-          }}
-        />
-      )
-    }
-
+function getResourceIcon(
+  type: string
+) {
+  if (
+    type === 'Desk'
+  ) {
     return (
-      <Inventory2OutlinedIcon
-        sx={{
-          fontSize: 21,
-        }}
-      />
+      <DeskOutlinedIcon />
     )
   }
 
-  const getAssetColors = (
-    type: string
-  ) => {
-    if (type === 'Desk') {
-      return {
-        color: '#59ad35',
-
-        backgroundColor:
-          'rgba(120,201,72,.11)',
-      }
-    }
-
-    if (type === 'Equipment') {
-      return {
-        color: '#159f99',
-
-        backgroundColor:
-          'rgba(24,170,163,.09)',
-      }
-    }
-
-    return {
-      color: '#666b7d',
-
-      backgroundColor: '#f2f3f5',
-    }
+  if (
+    type === 'Equipment'
+  ) {
+    return (
+      <DevicesOutlinedIcon />
+    )
   }
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        overflow: 'hidden',
+    <Inventory2OutlinedIcon />
+  )
+}
 
-        borderRadius: '22px',
+function getIconStyle(
+  type: string
+) {
+  if (
+    type === 'Desk'
+  ) {
+    return {
+      color:
+        '#58ad35',
 
-        border:
-          '1px solid #e5e9e3',
+      backgroundColor:
+        'rgba(120,201,72,.11)',
+    }
+  }
 
-        backgroundColor: '#ffffff',
+  if (
+    type === 'Equipment'
+  ) {
+    return {
+      color:
+        '#159f99',
 
-        boxShadow:
-          '0 18px 52px rgba(23,24,44,.055)',
-      }}
-    >
-      {/* HEADER */}
+      backgroundColor:
+        'rgba(24,170,163,.10)',
+    }
+  }
 
-      <Box
-        sx={{
-          paddingX: {
-            xs: 2,
-            md: 3,
-          },
+  return {
+    color:
+      '#687085',
 
-          paddingY: 2.4,
+    backgroundColor:
+      'rgba(104,112,133,.09)',
+  }
+}
 
-          display: 'flex',
+function getStatusStyle(
+  status: string
+) {
+  switch (status) {
+    case 'Available':
+      return {
+        color:
+          '#37861e',
 
-          alignItems: 'center',
+        borderColor:
+          'rgba(120,201,72,.48)',
 
-          justifyContent:
-            'space-between',
+        backgroundColor:
+          'rgba(120,201,72,.08)',
+      }
 
-          gap: 2,
+    case 'In Use':
+      return {
+        color:
+          '#117f7a',
 
-          borderBottom:
-            '1px solid #eaede8',
-        }}
-      >
-        <Box>
-          <Typography
-            sx={{
-              color: '#202337',
+        borderColor:
+          'rgba(24,170,163,.35)',
 
-              fontSize: '1.08rem',
+        backgroundColor:
+          'rgba(24,170,163,.08)',
+      }
 
-              fontWeight: 900,
-            }}
-          >
-            Office Resources
-          </Typography>
+    case 'Maintenance':
+      return {
+        color:
+          '#c94d4d',
 
-          <Typography
-            sx={{
-              marginTop: 0.3,
+        borderColor:
+          'rgba(201,77,77,.25)',
 
-              color: '#90939e',
+        backgroundColor:
+          'rgba(201,77,77,.07)',
+      }
 
-              fontSize: '0.79rem',
-            }}
-          >
-            Desks, equipment and other
-            shared workplace resources
-          </Typography>
-        </Box>
+    default:
+      return {
+        color:
+          '#676c79',
 
-        <Box
+        borderColor:
+          '#e1e4e0',
+
+        backgroundColor:
+          '#f7f8f6',
+      }
+  }
+}
+
+const ResourcesTable =
+  observer(
+    ({
+      onAddResource,
+    }: ResourcesTableProps) => {
+      const resources =
+        assetStore.assets
+          .filter(
+            (asset) =>
+              asset.type !==
+              'Room'
+          )
+          .filter(
+            (asset) =>
+              !isLocker(
+                asset
+              )
+          )
+
+      return (
+        <Paper
+          elevation={0}
           sx={{
-            display: 'flex',
+            overflow:
+              'hidden',
 
-            alignItems: 'center',
+            borderRadius:
+              '24px',
 
-            gap: 0.8,
+            border:
+              '1px solid #e3e7e1',
+
+            backgroundColor:
+              '#ffffff',
+
+            boxShadow:
+              '0 16px 45px rgba(23,24,44,.045)',
           }}
         >
-          <Box
-            sx={{
-              minWidth: 30,
-              height: 30,
-
-              paddingX: 1,
-
-              borderRadius: '999px',
-
-              display: 'flex',
-
-              alignItems: 'center',
-
-              justifyContent:
-                'center',
-
-              color: '#4b9932',
-
-              backgroundColor:
-                'rgba(120,201,72,.09)',
-
-              border:
-                '1px solid rgba(120,201,72,.15)',
-
-              fontSize: '0.72rem',
-
-              fontWeight: 900,
-            }}
-          >
-            {resources.length}
-          </Box>
+          {/* HEADER */}
 
           <Box
             sx={{
-              width: 7,
-              height: 7,
-
-              display: {
-                xs: 'none',
-                sm: 'block',
+              paddingX: {
+                xs: 2,
+                md: 3,
               },
 
-              borderRadius: '50%',
+              paddingY:
+                2.4,
 
-              backgroundColor:
-                '#78c948',
+              display:
+                'flex',
 
-              boxShadow:
-                '0 0 10px rgba(120,201,72,.7)',
-            }}
-          />
-        </Box>
-      </Box>
-
-      {/* LOADING */}
-
-      {assetStore.loading &&
-      resources.length === 0 ? (
-        <Box
-          sx={{
-            paddingY: 8,
-
-            display: 'flex',
-
-            flexDirection: 'column',
-
-            alignItems: 'center',
-
-            gap: 1.2,
-          }}
-        >
-          <CircularProgress
-            size={28}
-            sx={{
-              color: '#78c948',
-            }}
-          />
-
-          <Typography
-            sx={{
-              color: '#9497a2',
-
-              fontSize: '0.8rem',
-            }}
-          >
-            Loading resources...
-          </Typography>
-        </Box>
-      ) : resources.length === 0 ? (
-        /* EMPTY */
-
-        <Box
-          sx={{
-            paddingY: 6,
-
-            paddingX: 2,
-
-            textAlign: 'center',
-          }}
-        >
-          <Box
-            sx={{
-              width: 60,
-              height: 60,
-
-              marginX: 'auto',
-
-              marginBottom: 1.3,
-
-              borderRadius: '18px',
-
-              display: 'flex',
-
-              alignItems: 'center',
-
-              justifyContent:
+              alignItems:
                 'center',
 
-              color: '#59ad35',
+              justifyContent:
+                'space-between',
 
-              backgroundColor:
-                'rgba(120,201,72,.10)',
+              gap: 2,
+
+              flexWrap:
+                'wrap',
+
+              borderBottom:
+                '1px solid #edf0eb',
             }}
           >
-            <Inventory2OutlinedIcon
-              sx={{
-                fontSize: 30,
-              }}
-            />
-          </Box>
-
-          <Typography
-            sx={{
-              color: '#202337',
-
-              fontWeight: 900,
-            }}
-          >
-            No additional resources
-          </Typography>
-
-          <Typography
-            sx={{
-              marginTop: 0.45,
-
-              color: '#969aa5',
-
-              fontSize: '0.76rem',
-            }}
-          >
-            Desks and shared equipment
-            will appear here.
-          </Typography>
-        </Box>
-      ) : (
-        /* TABLE */
-
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow
+            <Box>
+              <Typography
                 sx={{
-                  backgroundColor:
-                    '#fafbfa',
+                  color:
+                    '#202337',
+
+                  fontSize:
+                    '1.25rem',
+
+                  fontWeight:
+                    900,
+
+                  letterSpacing:
+                    '-0.025em',
                 }}
               >
-                {[
-                  'Resource',
-                  'Type',
-                  'Floor',
-                  'Status',
-                ].map((title) => (
-                  <TableCell
-                    key={title}
+                Office Resources
+              </Typography>
+
+              <Typography
+                sx={{
+                  marginTop:
+                    0.35,
+
+                  color:
+                    '#9296a2',
+
+                  fontSize:
+                    '0.78rem',
+                }}
+              >
+                Desks, equipment and shared workplace resources
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                display:
+                  'flex',
+
+                alignItems:
+                  'center',
+
+                gap: 1,
+              }}
+            >
+              <Box
+                sx={{
+                  minWidth:
+                    48,
+
+                  height: 40,
+
+                  paddingX:
+                    1.3,
+
+                  display:
+                    'flex',
+
+                  alignItems:
+                    'center',
+
+                  justifyContent:
+                    'center',
+
+                  borderRadius:
+                    '999px',
+
+                  color:
+                    '#438d28',
+
+                  backgroundColor:
+                    'rgba(120,201,72,.09)',
+
+                  border:
+                    '1px solid rgba(120,201,72,.18)',
+
+                  fontSize:
+                    '0.78rem',
+
+                  fontWeight:
+                    900,
+                }}
+              >
+                {
+                  resources.length
+                }
+              </Box>
+
+              {authStore.isAdmin &&
+                onAddResource && (
+                  <Button
+                    variant="contained"
+
+                    startIcon={
+                      <AddOutlinedIcon />
+                    }
+
+                    onClick={
+                      onAddResource
+                    }
+
                     sx={{
-                      paddingY: 1.7,
+                      minHeight:
+                        40,
 
-                      color: '#7b7f8c',
+                      paddingX:
+                        1.6,
 
-                      borderColor:
-                        '#e9ece8',
+                      borderRadius:
+                        '11px',
 
-                      fontSize:
-                        '0.68rem',
+                      color:
+                        '#ffffff',
 
-                      fontWeight: 900,
+                      background:
+                        'linear-gradient(100deg, #58ad35, #18aaa3)',
 
-                      letterSpacing:
-                        '0.08em',
+                      boxShadow:
+                        '0 9px 22px rgba(24,170,163,.16)',
 
                       textTransform:
-                        'uppercase',
-                    }}
-                  >
-                    {title}
-                  </TableCell>
-                ))}
-
-                {authStore.isAdmin && (
-                  <TableCell
-                    align="right"
-                    sx={{
-                      color: '#7b7f8c',
-
-                      borderColor:
-                        '#e9ece8',
+                        'none',
 
                       fontSize:
-                        '0.68rem',
+                        '0.72rem',
 
-                      fontWeight: 900,
+                      fontWeight:
+                        900,
 
-                      letterSpacing:
-                        '0.08em',
-
-                      textTransform:
-                        'uppercase',
+                      '&:hover': {
+                        background:
+                          'linear-gradient(100deg, #4e9e31, #159b96)',
+                      },
                     }}
                   >
-                    Actions
-                  </TableCell>
+                    Add Resource
+                  </Button>
                 )}
-              </TableRow>
-            </TableHead>
+            </Box>
+          </Box>
 
-            <TableBody>
-              {resources.map(
-                (asset) => {
-                  const assetColors =
-                    getAssetColors(
-                      asset.type
-                    )
+          {/* EMPTY */}
 
-                  return (
-                    <TableRow
-                      key={
-                        asset.id ??
-                        `${asset.name}-${asset.location}`
-                      }
-                      sx={{
-                        transition:
-                          'background-color .16s ease',
+          {resources.length ===
+          0 ? (
+            <Box
+              sx={{
+                minHeight:
+                  220,
 
-                        '& td': {
-                          borderColor:
-                            '#eef0ed',
-                        },
+                display:
+                  'flex',
 
-                        '&:hover': {
-                          backgroundColor:
-                            'rgba(120,201,72,.035)',
-                        },
+                flexDirection:
+                  'column',
 
-                        '&:hover td:first-of-type':
-                          {
-                            boxShadow:
-                              'inset 3px 0 0 #78c948',
-                          },
+                alignItems:
+                  'center',
 
-                        '&:last-child td':
-                          {
-                            borderBottom:
-                              0,
-                          },
-                      }}
-                    >
-                      {/* RESOURCE */}
+                justifyContent:
+                  'center',
 
-                      <TableCell>
-                        <Box
+                gap: 0.8,
+
+                padding: 3,
+
+                textAlign:
+                  'center',
+              }}
+            >
+              <Inventory2OutlinedIcon
+                sx={{
+                  color:
+                    '#78c948',
+
+                  fontSize:
+                    40,
+                }}
+              />
+
+              <Typography
+                sx={{
+                  color:
+                    '#202337',
+
+                  fontWeight:
+                    900,
+                }}
+              >
+                No office resources yet
+              </Typography>
+
+              <Typography
+                sx={{
+                  color:
+                    '#969aa5',
+
+                  fontSize:
+                    '0.75rem',
+                }}
+              >
+                Desks, equipment and shared resources will appear here.
+              </Typography>
+
+              {authStore.isAdmin &&
+                onAddResource && (
+                  <Button
+                    startIcon={
+                      <AddOutlinedIcon />
+                    }
+
+                    onClick={
+                      onAddResource
+                    }
+
+                    sx={{
+                      marginTop:
+                        1,
+
+                      color:
+                        '#159f99',
+
+                      textTransform:
+                        'none',
+
+                      fontWeight:
+                        900,
+                    }}
+                  >
+                    Add first resource
+                  </Button>
+                )}
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow
+                    sx={{
+                      backgroundColor:
+                        '#fafbf9',
+                    }}
+                  >
+                    {[
+                      'RESOURCE',
+                      'TYPE',
+                      'CATEGORY',
+                      'FLOOR',
+                      'STATUS',
+                    ].map(
+                      (
+                        heading
+                      ) => (
+                        <TableCell
+                          key={
+                            heading
+                          }
                           sx={{
-                            display: 'flex',
+                            paddingY:
+                              1.6,
 
-                            alignItems:
-                              'center',
+                            color:
+                              '#777c89',
 
-                            gap: 1.3,
+                            fontSize:
+                              '0.66rem',
+
+                            fontWeight:
+                              900,
+
+                            letterSpacing:
+                              '0.08em',
+
+                            borderBottom:
+                              '1px solid #e9ece7',
                           }}
                         >
-                          <Box
+                          {
+                            heading
+                          }
+                        </TableCell>
+                      )
+                    )}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {resources.map(
+                    (
+                      resource
+                    ) => {
+                      const iconStyle =
+                        getIconStyle(
+                          resource.type
+                        )
+
+                      const statusStyle =
+                        getStatusStyle(
+                          resource.status
+                        )
+
+                      return (
+                        <TableRow
+                          key={
+                            resource.id ??
+                            `${resource.name}-${resource.location}`
+                          }
+                          sx={{
+                            '&:last-child td':
+                              {
+                                borderBottom:
+                                  'none',
+                              },
+
+                            '&:hover':
+                              {
+                                backgroundColor:
+                                  '#fcfdfb',
+                              },
+                          }}
+                        >
+                          <TableCell
                             sx={{
-                              width: 45,
-                              height: 45,
+                              paddingY:
+                                1.8,
 
-                              flexShrink: 0,
-
-                              borderRadius:
-                                '13px',
-
-                              display: 'flex',
-
-                              alignItems:
-                                'center',
-
-                              justifyContent:
-                                'center',
-
-                              color:
-                                assetColors.color,
-
-                              backgroundColor:
-                                assetColors.backgroundColor,
+                              borderBottom:
+                                '1px solid #edf0eb',
                             }}
                           >
-                            {getAssetIcon(
-                              asset.type
-                            )}
-                          </Box>
+                            <Box
+                              sx={{
+                                display:
+                                  'flex',
 
-                          <Box>
-                            <Typography
+                                alignItems:
+                                  'center',
+
+                                gap: 1.3,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width:
+                                    44,
+
+                                  height:
+                                    44,
+
+                                  flexShrink:
+                                    0,
+
+                                  display:
+                                    'flex',
+
+                                  alignItems:
+                                    'center',
+
+                                  justifyContent:
+                                    'center',
+
+                                  borderRadius:
+                                    '13px',
+
+                                  color:
+                                    iconStyle.color,
+
+                                  backgroundColor:
+                                    iconStyle.backgroundColor,
+                                }}
+                              >
+                                {getResourceIcon(
+                                  resource.type
+                                )}
+                              </Box>
+
+                              <Box>
+                                <Typography
+                                  sx={{
+                                    color:
+                                      '#202337',
+
+                                    fontSize:
+                                      '0.82rem',
+
+                                    fontWeight:
+                                      900,
+                                  }}
+                                >
+                                  {
+                                    resource.name
+                                  }
+                                </Typography>
+
+                                <Typography
+                                  sx={{
+                                    marginTop:
+                                      0.2,
+
+                                    maxWidth:
+                                      320,
+
+                                    color:
+                                      '#9a9da8',
+
+                                    fontSize:
+                                      '0.67rem',
+
+                                    overflow:
+                                      'hidden',
+
+                                    textOverflow:
+                                      'ellipsis',
+
+                                    whiteSpace:
+                                      'nowrap',
+                                  }}
+                                >
+                                  {resource.description ||
+                                    'Smart Office Resource'}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              color:
+                                '#5f6472',
+
+                              fontSize:
+                                '0.76rem',
+
+                              fontWeight:
+                                800,
+
+                              borderBottom:
+                                '1px solid #edf0eb',
+                            }}
+                          >
+                            {
+                              resource.type
+                            }
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              color:
+                                '#6e7380',
+
+                              fontSize:
+                                '0.74rem',
+
+                              borderBottom:
+                                '1px solid #edf0eb',
+                            }}
+                          >
+                            {resource.category ||
+                              'General'}
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              borderBottom:
+                                '1px solid #edf0eb',
+                            }}
+                          >
+                            <Chip
+                              label={
+                                resource.location
+                              }
+
+                              size="small"
+
                               sx={{
                                 color:
-                                  '#202337',
+                                  '#555b68',
+
+                                backgroundColor:
+                                  '#f4f5f3',
+
+                                border:
+                                  '1px solid #e1e4e0',
 
                                 fontSize:
-                                  '0.87rem',
+                                  '0.66rem',
+
+                                fontWeight:
+                                  800,
+                              }}
+                            />
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              borderBottom:
+                                '1px solid #edf0eb',
+                            }}
+                          >
+                            <Chip
+                              label={
+                                resource.status
+                              }
+
+                              size="small"
+
+                              variant="outlined"
+
+                              sx={{
+                                color:
+                                  statusStyle.color,
+
+                                backgroundColor:
+                                  statusStyle.backgroundColor,
+
+                                borderColor:
+                                  statusStyle.borderColor,
+
+                                fontSize:
+                                  '0.66rem',
 
                                 fontWeight:
                                   900,
                               }}
-                            >
-                              {asset.name}
-                            </Typography>
-
-                            <Typography
-                              sx={{
-                                marginTop:
-                                  0.15,
-
-                                color:
-                                  '#a0a3ad',
-
-                                fontSize:
-                                  '0.67rem',
-                              }}
-                            >
-                              Smart Office Resource
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-
-                      {/* TYPE */}
-
-                      <TableCell>
-                        <Typography
-                          sx={{
-                            color:
-                              '#646878',
-
-                            fontSize:
-                              '0.82rem',
-
-                            fontWeight:
-                              600,
-                          }}
-                        >
-                          {asset.type}
-                        </Typography>
-                      </TableCell>
-
-                      {/* FLOOR */}
-
-                      <TableCell>
-                        <Chip
-                          label={
-                            asset.location
-                          }
-                          size="small"
-                          sx={{
-                            height: 27,
-
-                            color:
-                              '#55596a',
-
-                            backgroundColor:
-                              '#f4f5f4',
-
-                            border:
-                              '1px solid #e6e9e5',
-
-                            fontSize:
-                              '0.71rem',
-
-                            fontWeight:
-                              800,
-                          }}
-                        />
-                      </TableCell>
-
-                      {/* STATUS */}
-
-                      <TableCell>
-                        <Chip
-                          label={
-                            asset.status
-                          }
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            ...getStatusStyle(
-                              asset.status
-                            ),
-
-                            height: 28,
-
-                            fontSize:
-                              '0.7rem',
-
-                            fontWeight:
-                              800,
-                          }}
-                        />
-                      </TableCell>
-
-                      {/* ADMIN ACTIONS */}
-
-                      {authStore.isAdmin && (
-                        <TableCell align="right">
-                          <Tooltip title="Delete resource">
-                            <span>
-                              <IconButton
-                                disabled={
-                                  !asset.id ||
-                                  deletingId ===
-                                    asset.id
-                                }
-                                onClick={() => {
-                                  if (
-                                    asset.id
-                                  ) {
-                                    void handleDelete(
-                                      asset.id,
-                                      asset.name
-                                    )
-                                  }
-                                }}
-                                sx={{
-                                  width: 36,
-                                  height: 36,
-
-                                  color:
-                                    '#d85959',
-
-                                  borderRadius:
-                                    '10px',
-
-                                  '&:hover':
-                                    {
-                                      color:
-                                        '#cc3e3e',
-
-                                      backgroundColor:
-                                        '#fff0f0',
-                                    },
-                                }}
-                              >
-                                {deletingId ===
-                                asset.id ? (
-                                  <CircularProgress
-                                    size={18}
-                                    color="inherit"
-                                  />
-                                ) : (
-                                  <DeleteOutlinedIcon
-                                    sx={{
-                                      fontSize:
-                                        20,
-                                    }}
-                                  />
-                                )}
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  )
-                }
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Paper>
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
+      )
+    }
   )
-})
 
 export default ResourcesTable

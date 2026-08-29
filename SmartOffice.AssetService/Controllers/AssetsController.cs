@@ -30,47 +30,80 @@ namespace SmartOffice.AssetService.Controllers
         public async Task<ActionResult<List<Asset>>>
             GetAssets()
         {
+            /*
+                Portfolio/demo office inventory.
+
+                Existing data is never deleted or replaced.
+            */
+
+            await OfficeResourceDemoSeeder
+                .EnsureDemoDataAsync(
+                    _mongoDbService
+                );
+
             var assets =
                 await _mongoDbService
                     .GetAllAsync();
 
-            return Ok(assets);
+            return Ok(
+                assets
+            );
         }
 
         // =========================================
-        // CREATE ASSET
-        // ADMIN ONLY
+        // CREATE
         // =========================================
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Asset>>
             CreateAsset(
-                Asset asset
+                CreateAssetRequest request
             )
         {
+            var name =
+                request.Name.Trim();
+
+            var type =
+                request.Type.Trim();
+
+            var category =
+                request.Category.Trim();
+
+            var location =
+                request.Location.Trim();
+
+            var description =
+                request.Description.Trim();
+
             if (
                 string.IsNullOrWhiteSpace(
-                    asset.Name
-                ) ||
-                string.IsNullOrWhiteSpace(
-                    asset.Type
+                    name
                 )
             )
             {
                 return BadRequest(
-                    "Name and type are required."
+                    "Resource name is required."
                 );
             }
 
             if (
-                asset.Location != "Floor 15" &&
-                asset.Location != "Floor 16"
+                name.Length >
+                100
             )
             {
                 return BadRequest(
-                    "Floor must be Floor 15 or Floor 16."
+                    "Resource name cannot exceed 100 characters."
                 );
+            }
+
+            if (
+                type ==
+                "Other"
+            )
+            {
+                type =
+                    "Shared Resource";
             }
 
             var allowedTypes =
@@ -79,12 +112,12 @@ namespace SmartOffice.AssetService.Controllers
                     "Desk",
                     "Room",
                     "Equipment",
-                    "Other"
+                    "Shared Resource"
                 };
 
             if (
                 !allowedTypes.Contains(
-                    asset.Type
+                    type
                 )
             )
             {
@@ -93,17 +126,87 @@ namespace SmartOffice.AssetService.Controllers
                 );
             }
 
-            /*
-                Meeting Room availability is
-                calculated automatically from
-                reservations.
-
-                A new room always starts Available.
-            */
-
-            if (asset.Type == "Room")
+            if (
+                location !=
+                    "Floor 15" &&
+                location !=
+                    "Floor 16"
+            )
             {
-                asset.Status =
+                return BadRequest(
+                    "Floor must be Floor 15 or Floor 16."
+                );
+            }
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    category
+                )
+            )
+            {
+                category =
+                    GetDefaultCategory(
+                        type
+                    );
+            }
+
+            if (
+                category.Length >
+                80
+            )
+            {
+                return BadRequest(
+                    "Category cannot exceed 80 characters."
+                );
+            }
+
+            if (
+                description.Length >
+                300
+            )
+            {
+                return BadRequest(
+                    "Description cannot exceed 300 characters."
+                );
+            }
+
+            var features =
+                NormalizeFeatures(
+                    request.Features
+                );
+
+            if (
+                features.Count >
+                10
+            )
+            {
+                return BadRequest(
+                    "A resource can have a maximum of 10 features."
+                );
+            }
+
+            if (
+                features.Any(
+                    feature =>
+                        feature.Length >
+                        60
+                )
+            )
+            {
+                return BadRequest(
+                    "Each feature can contain a maximum of 60 characters."
+                );
+            }
+
+            var status =
+                request.Status.Trim();
+
+            if (
+                type ==
+                "Room"
+            )
+            {
+                status =
                     "Available";
             }
             else
@@ -118,7 +221,7 @@ namespace SmartOffice.AssetService.Controllers
 
                 if (
                     !allowedStatuses.Contains(
-                        asset.Status
+                        status
                     )
                 )
                 {
@@ -128,9 +231,36 @@ namespace SmartOffice.AssetService.Controllers
                 }
             }
 
+            var asset =
+                new Asset
+                {
+                    Name =
+                        name,
+
+                    Type =
+                        type,
+
+                    Category =
+                        category,
+
+                    Location =
+                        location,
+
+                    Description =
+                        description,
+
+                    Features =
+                        features,
+
+                    Status =
+                        status
+                };
+
             var createdAsset =
                 await _mongoDbService
-                    .CreateAsync(asset);
+                    .CreateAsync(
+                        asset
+                    );
 
             return Created(
                 $"/api/assets/{createdAsset.Id}",
@@ -139,8 +269,7 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // UPDATE ASSET
-        // ADMIN ONLY
+        // UPDATE
         // =========================================
 
         [HttpPut("{id}")]
@@ -153,22 +282,31 @@ namespace SmartOffice.AssetService.Controllers
         {
             var asset =
                 await _mongoDbService
-                    .GetByIdAsync(id);
+                    .GetByIdAsync(
+                        id
+                    );
 
-            if (asset == null)
+            if (
+                asset ==
+                null
+            )
             {
                 return NotFound(
                     "Resource not found."
                 );
             }
 
-            // -------------------------------------
-            // FLOOR VALIDATION
-            // -------------------------------------
+            var location =
+                request.Location.Trim();
+
+            var status =
+                request.Status.Trim();
 
             if (
-                request.Location != "Floor 15" &&
-                request.Location != "Floor 16"
+                location !=
+                    "Floor 15" &&
+                location !=
+                    "Floor 16"
             )
             {
                 return BadRequest(
@@ -176,24 +314,113 @@ namespace SmartOffice.AssetService.Controllers
                 );
             }
 
-            // -------------------------------------
-            // MEETING ROOM
-            // -------------------------------------
+            string? category =
+                null;
 
-            if (asset.Type == "Room")
+            if (
+                request.Category !=
+                null
+            )
             {
-                /*
-                    Admin may only manually select:
-
-                    Available
-                    Maintenance
-
-                    In Use comes from active bookings.
-                */
+                category =
+                    request.Category
+                        .Trim();
 
                 if (
-                    request.Status != "Available" &&
-                    request.Status != "Maintenance"
+                    string.IsNullOrWhiteSpace(
+                        category
+                    )
+                )
+                {
+                    category =
+                        GetDefaultCategory(
+                            NormalizeLegacyType(
+                                asset.Type
+                            )
+                        );
+                }
+
+                if (
+                    category.Length >
+                    80
+                )
+                {
+                    return BadRequest(
+                        "Category cannot exceed 80 characters."
+                    );
+                }
+            }
+
+            string? description =
+                null;
+
+            if (
+                request.Description !=
+                null
+            )
+            {
+                description =
+                    request.Description
+                        .Trim();
+
+                if (
+                    description.Length >
+                    300
+                )
+                {
+                    return BadRequest(
+                        "Description cannot exceed 300 characters."
+                    );
+                }
+            }
+
+            List<string>? features =
+                null;
+
+            if (
+                request.Features !=
+                null
+            )
+            {
+                features =
+                    NormalizeFeatures(
+                        request.Features
+                    );
+
+                if (
+                    features.Count >
+                    10
+                )
+                {
+                    return BadRequest(
+                        "A resource can have a maximum of 10 features."
+                    );
+                }
+
+                if (
+                    features.Any(
+                        feature =>
+                            feature.Length >
+                            60
+                    )
+                )
+                {
+                    return BadRequest(
+                        "Each feature can contain a maximum of 60 characters."
+                    );
+                }
+            }
+
+            if (
+                asset.Type ==
+                "Room"
+            )
+            {
+                if (
+                    status !=
+                        "Available" &&
+                    status !=
+                        "Maintenance"
                 )
                 {
                     return BadRequest(
@@ -201,20 +428,11 @@ namespace SmartOffice.AssetService.Controllers
                     );
                 }
 
-                /*
-                    Important business rule:
-
-                    A room cannot be moved to
-                    Maintenance while it still has an
-                    active or upcoming reservation.
-
-                    This prevents us from silently
-                    breaking users' existing bookings.
-                */
-
                 if (
-                    request.Status == "Maintenance" &&
-                    asset.Status != "Maintenance"
+                    status ==
+                        "Maintenance" &&
+                    asset.Status !=
+                        "Maintenance"
                 )
                 {
                     var reservations =
@@ -223,7 +441,10 @@ namespace SmartOffice.AssetService.Controllers
                                 id
                             );
 
-                    if (reservations.Count > 0)
+                    if (
+                        reservations.Count >
+                        0
+                    )
                     {
                         var nextReservation =
                             reservations.First();
@@ -241,11 +462,8 @@ namespace SmartOffice.AssetService.Controllers
                                     new
                                     {
                                         nextReservation.Id,
-
                                         nextReservation.StartTimeUtc,
-
                                         nextReservation.EndTimeUtc,
-
                                         nextReservation.BookedBy
                                     }
                             }
@@ -253,11 +471,6 @@ namespace SmartOffice.AssetService.Controllers
                     }
                 }
             }
-
-            // -------------------------------------
-            // OTHER RESOURCES
-            // -------------------------------------
-
             else
             {
                 var allowedStatuses =
@@ -270,7 +483,7 @@ namespace SmartOffice.AssetService.Controllers
 
                 if (
                     !allowedStatuses.Contains(
-                        request.Status
+                        status
                     )
                 )
                 {
@@ -280,31 +493,34 @@ namespace SmartOffice.AssetService.Controllers
                 }
             }
 
-            // -------------------------------------
-            // UPDATE
-            // -------------------------------------
-
             var updatedAsset =
                 await _mongoDbService
                     .UpdateAssetAsync(
                         id,
-                        request.Location,
-                        request.Status
+                        location,
+                        status,
+                        category,
+                        description,
+                        features
                     );
 
-            if (updatedAsset == null)
+            if (
+                updatedAsset ==
+                null
+            )
             {
                 return NotFound(
                     "Resource not found."
                 );
             }
 
-            return Ok(updatedAsset);
+            return Ok(
+                updatedAsset
+            );
         }
 
         // =========================================
-        // DELETE ASSET
-        // ADMIN ONLY
+        // DELETE
         // =========================================
 
         [HttpDelete("{id}")]
@@ -327,25 +543,23 @@ namespace SmartOffice.AssetService.Controllers
 
             var asset =
                 await _mongoDbService
-                    .GetByIdAsync(id);
+                    .GetByIdAsync(
+                        id
+                    );
 
-            if (asset == null)
+            if (
+                asset ==
+                null
+            )
             {
                 return NotFound(
                     "Asset not found."
                 );
             }
 
-            /*
-                Same protection applies to deleting
-                a meeting room.
-
-                We should not delete Butterfly while
-                people still have bookings for it.
-            */
-
             if (
-                asset.Type == "Room"
+                asset.Type ==
+                "Room"
             )
             {
                 var hasReservations =
@@ -354,7 +568,9 @@ namespace SmartOffice.AssetService.Controllers
                             id
                         );
 
-                if (hasReservations)
+                if (
+                    hasReservations
+                )
                 {
                     return Conflict(
                         "This room has active or upcoming reservations. Cancel them before deleting the room."
@@ -364,9 +580,13 @@ namespace SmartOffice.AssetService.Controllers
 
             var deleted =
                 await _mongoDbService
-                    .DeleteAsync(id);
+                    .DeleteAsync(
+                        id
+                    );
 
-            if (!deleted)
+            if (
+                !deleted
+            )
             {
                 return NotFound(
                     "Asset not found."
@@ -374,6 +594,67 @@ namespace SmartOffice.AssetService.Controllers
             }
 
             return NoContent();
+        }
+
+        // =========================================
+        // HELPERS
+        // =========================================
+
+        private static string
+            GetDefaultCategory(
+                string type
+            )
+        {
+            return type switch
+            {
+                "Room" =>
+                    "Meeting Room",
+
+                "Desk" =>
+                    "Standard Desk",
+
+                "Equipment" =>
+                    "General Equipment",
+
+                "Shared Resource" =>
+                    "Shared Resource",
+
+                _ =>
+                    "General"
+            };
+        }
+
+        private static string
+            NormalizeLegacyType(
+                string type
+            )
+        {
+            return type ==
+                "Other"
+                ? "Shared Resource"
+                : type;
+        }
+
+        private static List<string>
+            NormalizeFeatures(
+                IEnumerable<string> features
+            )
+        {
+            return features
+                .Where(
+                    feature =>
+                        !string.IsNullOrWhiteSpace(
+                            feature
+                        )
+                )
+                .Select(
+                    feature =>
+                        feature.Trim()
+                )
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase
+                )
+                .ToList();
         }
     }
 }
