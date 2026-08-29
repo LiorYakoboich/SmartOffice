@@ -1,5 +1,10 @@
 import { makeAutoObservable } from 'mobx'
-import { apiRequest, ASSET_API_URL } from '../services/api'
+
+import {
+  apiRequest,
+  ASSET_API_URL,
+} from '../services/api'
+
 import { authStore } from './AuthStore'
 
 export interface Asset {
@@ -11,9 +16,16 @@ export interface Asset {
   createdAt?: string
 }
 
+export interface UpdateAssetRequest {
+  location: string
+  status: string
+}
+
 class AssetStore {
   assets: Asset[] = []
+
   loading = false
+
   error = ''
 
   constructor() {
@@ -26,14 +38,20 @@ class AssetStore {
     }
 
     this.loading = true
+
     this.error = ''
 
     try {
-      this.assets = await apiRequest<Asset[]>(ASSET_API_URL, {
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
+      this.assets =
+        await apiRequest<Asset[]>(
+          ASSET_API_URL,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${authStore.token}`,
+            },
+          }
+        )
     } catch (error) {
       this.error =
         error instanceof Error
@@ -44,25 +62,49 @@ class AssetStore {
     }
   }
 
-  async createAsset(asset: Omit<Asset, 'id' | 'createdAt'>) {
+  async createAsset(
+    asset: Omit<
+      Asset,
+      'id' | 'createdAt'
+    >
+  ) {
     if (!authStore.token) {
-      throw new Error('Authentication required')
+      throw new Error(
+        'Authentication required'
+      )
     }
 
     this.loading = true
+
     this.error = ''
 
     try {
-      await apiRequest<Asset>(ASSET_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authStore.token}`,
-        },
-        body: JSON.stringify(asset),
-      })
+      const createdAsset =
+        await apiRequest<Asset>(
+          ASSET_API_URL,
+          {
+            method: 'POST',
 
-      await this.loadAssets()
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              Authorization:
+                `Bearer ${authStore.token}`,
+            },
+
+            body: JSON.stringify(
+              asset
+            ),
+          }
+        )
+
+      this.assets = [
+        ...this.assets,
+        createdAsset,
+      ]
+
+      return createdAsset
     } catch (error) {
       this.error =
         error instanceof Error
@@ -75,25 +117,91 @@ class AssetStore {
     }
   }
 
-  async deleteAsset(id: string) {
+  async updateAsset(
+    id: string,
+    request: UpdateAssetRequest
+  ) {
     if (!authStore.token) {
-      throw new Error('Authentication required')
+      throw new Error(
+        'Authentication required'
+      )
     }
 
     this.loading = true
+
     this.error = ''
 
     try {
-      await apiRequest<void>(`${ASSET_API_URL}/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
+      const updatedAsset =
+        await apiRequest<Asset>(
+          `${ASSET_API_URL}/${id}`,
+          {
+            method: 'PUT',
 
-      this.assets = this.assets.filter(
-        (asset) => asset.id !== id
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              Authorization:
+                `Bearer ${authStore.token}`,
+            },
+
+            body: JSON.stringify(
+              request
+            ),
+          }
+        )
+
+      this.assets =
+        this.assets.map(
+          (asset) =>
+            asset.id === id
+              ? updatedAsset
+              : asset
+        )
+
+      return updatedAsset
+    } catch (error) {
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update resource'
+
+      throw error
+    } finally {
+      this.loading = false
+    }
+  }
+
+  async deleteAsset(id: string) {
+    if (!authStore.token) {
+      throw new Error(
+        'Authentication required'
       )
+    }
+
+    this.loading = true
+
+    this.error = ''
+
+    try {
+      await apiRequest<void>(
+        `${ASSET_API_URL}/${id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization:
+              `Bearer ${authStore.token}`,
+          },
+        }
+      )
+
+      this.assets =
+        this.assets.filter(
+          (asset) =>
+            asset.id !== id
+        )
     } catch (error) {
       this.error =
         error instanceof Error
@@ -108,8 +216,10 @@ class AssetStore {
 
   clear() {
     this.assets = []
+
     this.error = ''
   }
 }
 
-export const assetStore = new AssetStore()
+export const assetStore =
+  new AssetStore()

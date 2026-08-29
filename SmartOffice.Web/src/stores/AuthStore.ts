@@ -1,108 +1,266 @@
 import { makeAutoObservable } from 'mobx'
-import { apiRequest, AUTH_API_URL } from '../services/api'
 
-export type UserRole = 'Admin' | 'Member'
+import {
+  apiRequest,
+  AUTH_API_URL,
+  UNAUTHORIZED_EVENT,
+} from '../services/api'
 
-export interface User {
+export interface AuthUser {
   id: number
+
+  /*
+    Display name.
+
+    Example:
+    Lior Yakobovich
+  */
+
   name: string
-  role: UserRole
+
+  /*
+    Username used only for login.
+
+    Example:
+    liorushy1
+  */
+
+  username?: string
+
+  firstName?: string
+
+  lastName?: string
+
+  role: string
 }
 
 interface LoginResponse {
   token: string
-  user: User
+
+  user: AuthUser
+}
+
+interface RegisterResponse {
+  id: number
+
+  username: string
+
+  firstName: string
+
+  lastName: string
+
+  name: string
+
+  role: string
 }
 
 class AuthStore {
-  token: string | null = localStorage.getItem('token')
-  user: User | null = this.loadStoredUser()
+  token: string | null = null
+
+  user: AuthUser | null = null
+
   loading = false
+
   error = ''
 
   constructor() {
     makeAutoObservable(this)
-  }
 
-  private loadStoredUser(): User | null {
-    const storedUser = localStorage.getItem('user')
+    this.restoreSession()
 
-    if (!storedUser) {
-      return null
-    }
+    /*
+      Listen for a global 401 response.
 
-    try {
-      return JSON.parse(storedUser) as User
-    } catch {
-      return null
-    }
+      This allows every API call in the application
+      to automatically sign the user out when the
+      JWT expires.
+    */
+
+    window.addEventListener(
+      UNAUTHORIZED_EVENT,
+      this.handleUnauthorized
+    )
   }
 
   get isAuthenticated() {
-    return Boolean(this.token && this.user)
+    return Boolean(
+      this.token &&
+      this.user
+    )
   }
 
   get isAdmin() {
-    return this.user?.role === 'Admin'
+    return (
+      this.user?.role === 'Admin'
+    )
   }
 
-  async login(name: string, password: string) {
-    this.loading = true
-    this.error = ''
+  /*
+    ------------------------------------------------
+    SESSION RESTORE
+    ------------------------------------------------
+  */
 
-    try {
-      const response = await apiRequest<LoginResponse>(
-        `${AUTH_API_URL}/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            password,
-          }),
-        }
+  private restoreSession() {
+    const storedToken =
+      localStorage.getItem(
+        'smartoffice_token'
       )
 
-      this.token = response.token
-      this.user = response.user
+    const storedUser =
+      localStorage.getItem(
+        'smartoffice_user'
+      )
 
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-    } catch (error) {
-      this.error =
-        error instanceof Error ? error.message : 'Login failed'
+    if (
+      !storedToken ||
+      !storedUser
+    ) {
+      return
+    }
 
-      throw error
-    } finally {
-      this.loading = false
+    try {
+      this.token =
+        storedToken
+
+      this.user =
+        JSON.parse(
+          storedUser
+        ) as AuthUser
+    } catch {
+      this.clearSession()
     }
   }
 
-  async register(
-    name: string,
-    password: string,
-    role: UserRole
+  /*
+    ------------------------------------------------
+    SAVE SESSION
+    ------------------------------------------------
+  */
+
+  private saveSession() {
+    if (
+      !this.token ||
+      !this.user
+    ) {
+      return
+    }
+
+    localStorage.setItem(
+      'smartoffice_token',
+      this.token
+    )
+
+    localStorage.setItem(
+      'smartoffice_user',
+      JSON.stringify(
+        this.user
+      )
+    )
+  }
+
+  /*
+    ------------------------------------------------
+    CLEAR SESSION
+    ------------------------------------------------
+  */
+
+  private clearSession() {
+    this.token = null
+
+    this.user = null
+
+    localStorage.removeItem(
+      'smartoffice_token'
+    )
+
+    localStorage.removeItem(
+      'smartoffice_user'
+    )
+  }
+
+  /*
+    ------------------------------------------------
+    SESSION EXPIRED
+    ------------------------------------------------
+
+    Arrow function is used so "this" remains
+    connected to AuthStore when called by
+    window.addEventListener.
+  */
+
+  private handleUnauthorized =
+    () => {
+      /*
+        If there is no current session,
+        this may simply be a failed login attempt.
+
+        In that case login() will display the
+        authentication error itself.
+      */
+
+      if (
+        !this.token &&
+        !this.user
+      ) {
+        return
+      }
+
+      this.clearSession()
+
+      this.loading = false
+
+      this.error =
+        'Your session expired. Please sign in again.'
+    }
+
+  /*
+    ------------------------------------------------
+    LOGIN
+    ------------------------------------------------
+  */
+
+  async login(
+    username: string,
+    password: string
   ) {
     this.loading = true
+
     this.error = ''
 
     try {
-      await apiRequest(`${AUTH_API_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          password,
-          role,
-        }),
-      })
+      const response =
+        await apiRequest<LoginResponse>(
+          `${AUTH_API_URL}/login`,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body: JSON.stringify({
+              name: username,
+              password,
+            }),
+          }
+        )
+
+      this.token =
+        response.token
+
+      this.user =
+        response.user
+
+      this.saveSession()
+
+      return response
     } catch (error) {
       this.error =
-        error instanceof Error ? error.message : 'Registration failed'
+        error instanceof Error
+          ? error.message
+          : 'Login failed'
 
       throw error
     } finally {
@@ -110,14 +268,77 @@ class AuthStore {
     }
   }
 
-  logout() {
-    this.token = null
-    this.user = null
+  /*
+    ------------------------------------------------
+    REGISTER
+    ------------------------------------------------
+  */
+
+  async register(
+    firstName: string,
+    lastName: string,
+    username: string,
+    password: string
+  ) {
+    this.loading = true
+
     this.error = ''
 
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    try {
+      const response =
+        await apiRequest<RegisterResponse>(
+          `${AUTH_API_URL}/register`,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body: JSON.stringify({
+              firstName,
+              lastName,
+
+              /*
+                The backend still uses "Name"
+                as the username database field.
+              */
+
+              name: username,
+
+              password,
+            }),
+          }
+        )
+
+      return response
+    } catch (error) {
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Registration failed'
+
+      throw error
+    } finally {
+      this.loading = false
+    }
+  }
+
+  /*
+    ------------------------------------------------
+    MANUAL LOGOUT
+    ------------------------------------------------
+  */
+
+  logout() {
+    this.error = ''
+
+    this.loading = false
+
+    this.clearSession()
   }
 }
 
-export const authStore = new AuthStore()
+export const authStore =
+  new AuthStore()
