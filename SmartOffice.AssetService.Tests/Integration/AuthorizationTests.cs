@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
@@ -175,13 +174,10 @@ namespace SmartOffice.AssetService.Tests.Integration
                     "mongodb://localhost:27017";
 
             /*
-                The exact same JWT settings are used
-                both to create the test token and to
-                configure JwtBearer validation.
+                These credentials exist only inside
+                the automated test project.
 
-                This is important because Program.cs
-                reads its JWT configuration while the
-                application is being built.
+                They are not production secrets.
             */
 
             private const string
@@ -217,6 +213,17 @@ namespace SmartOffice.AssetService.Tests.Integration
                 DatabaseName =
                     $"SmartOfficeAuthorizationTests_{Guid.NewGuid():N}";
 
+                /*
+                    Program.cs reads Jwt:Key,
+                    Jwt:Issuer and Jwt:Audience
+                    immediately while the application
+                    is starting.
+
+                    UseSetting makes those values
+                    available early enough for the
+                    WebApplicationFactory host.
+                */
+
                 _factory =
                     new WebApplicationFactory<Program>()
                         .WithWebHostBuilder(
@@ -226,72 +233,45 @@ namespace SmartOffice.AssetService.Tests.Integration
                                     "Testing"
                                 );
 
-                                // =================================
-                                // TEST CONFIGURATION
-                                // =================================
-
-                                builder.ConfigureAppConfiguration(
-                                    (
-                                        _,
-                                        configuration
-                                    ) =>
-                                    {
-                                        var testSettings =
-                                            new Dictionary<
-                                                string,
-                                                string?
-                                            >
-                                            {
-                                                [
-                                                    "MongoDb:ConnectionString"
-                                                ] =
-                                                    MongoConnectionString,
-
-                                                [
-                                                    "MongoDb:DatabaseName"
-                                                ] =
-                                                    DatabaseName,
-
-                                                [
-                                                    "Jwt:Key"
-                                                ] =
-                                                    TestJwtKey,
-
-                                                [
-                                                    "Jwt:Issuer"
-                                                ] =
-                                                    TestJwtIssuer,
-
-                                                [
-                                                    "Jwt:Audience"
-                                                ] =
-                                                    TestJwtAudience
-                                            };
-
-                                        configuration
-                                            .AddInMemoryCollection(
-                                                testSettings
-                                            );
-                                    }
+                                builder.UseSetting(
+                                    "MongoDb:ConnectionString",
+                                    MongoConnectionString
                                 );
 
-                                // =================================
-                                // FORCE JWT TEST SETTINGS
-                                // =================================
+                                builder.UseSetting(
+                                    "MongoDb:DatabaseName",
+                                    DatabaseName
+                                );
+
+                                builder.UseSetting(
+                                    "Jwt:Key",
+                                    TestJwtKey
+                                );
+
+                                builder.UseSetting(
+                                    "Jwt:Issuer",
+                                    TestJwtIssuer
+                                );
+
+                                builder.UseSetting(
+                                    "Jwt:Audience",
+                                    TestJwtAudience
+                                );
+
+                                /*
+                                    We also explicitly configure
+                                    JwtBearer validation for the
+                                    test server.
+
+                                    This guarantees that tokens
+                                    created by Authenticate()
+                                    use the same values as the
+                                    server validating them.
+                                */
 
                                 builder.ConfigureTestServices(
                                     services =>
                                     {
-                                        /*
-                                            Program.cs already registered
-                                            JwtBearer authentication.
-
-                                            For integration tests we override
-                                            the validation settings so the
-                                            server validates tokens with the
-                                            exact same key used below.
-                                        */
-
                                         services.PostConfigure<
                                             JwtBearerOptions
                                         >(
@@ -361,7 +341,7 @@ namespace SmartOffice.AssetService.Tests.Integration
             }
 
             // =========================================
-            // JWT AUTHENTICATION
+            // JWT
             // =========================================
 
             public void Authenticate(

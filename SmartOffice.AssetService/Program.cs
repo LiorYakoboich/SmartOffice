@@ -1,71 +1,82 @@
 using System.Text;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 
 using SmartOffice.AssetService.Data;
+using SmartOffice.AssetService.Health;
 
 var builder =
-    WebApplication.CreateBuilder(
-        args
-    );
+    WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton<MongoDbService>();
+
+// =========================================
+// HEALTH CHECKS
+// =========================================
 
 builder.Services
-    .AddControllers();
-
-builder.Services
-    .AddOpenApi();
-
-builder.Services
-    .AddSingleton<MongoDbService>();
-
-builder.Services
-    .AddCors(
-        options =>
+    .AddHealthChecks()
+    .AddCheck<MongoDbHealthCheck>(
+        "mongodb",
+        tags: new[]
         {
-            options.AddPolicy(
-                "Frontend",
-                policy =>
-                {
-                    policy
-                        .WithOrigins(
-                            "http://localhost:5173"
-                        )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                }
-            );
+            "ready"
         }
     );
 
+// =========================================
+// CORS
+// =========================================
+
+builder.Services.AddCors(
+    options =>
+    {
+        options.AddPolicy(
+            "Frontend",
+            policy =>
+            {
+                policy
+                    .WithOrigins(
+                        "http://localhost:5173"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            }
+        );
+    }
+);
+
+// =========================================
+// JWT
+// =========================================
+
 var jwtKey =
-    builder.Configuration[
-        "Jwt:Key"
-    ]
+    builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException(
         "JWT key is missing."
     );
 
 var jwtIssuer =
-    builder.Configuration[
-        "Jwt:Issuer"
-    ]
+    builder.Configuration["Jwt:Issuer"]
     ?? throw new InvalidOperationException(
         "JWT issuer is missing."
     );
 
 var jwtAudience =
-    builder.Configuration[
-        "Jwt:Audience"
-    ]
+    builder.Configuration["Jwt:Audience"]
     ?? throw new InvalidOperationException(
         "JWT audience is missing."
     );
 
 builder.Services
     .AddAuthentication(
-        JwtBearerDefaults
-            .AuthenticationScheme
+        JwtBearerDefaults.AuthenticationScheme
     )
     .AddJwtBearer(
         options =>
@@ -73,30 +84,23 @@ builder.Services
             options.TokenValidationParameters =
                 new TokenValidationParameters
                 {
-                    ValidateIssuer =
-                        true,
+                    ValidateIssuer = true,
 
-                    ValidateAudience =
-                        true,
+                    ValidateAudience = true,
 
-                    ValidateLifetime =
-                        true,
+                    ValidateLifetime = true,
 
-                    ValidateIssuerSigningKey =
-                        true,
+                    ValidateIssuerSigningKey = true,
 
-                    ValidIssuer =
-                        jwtIssuer,
+                    ValidIssuer = jwtIssuer,
 
-                    ValidAudience =
-                        jwtAudience,
+                    ValidAudience = jwtAudience,
 
                     IssuerSigningKey =
                         new SymmetricSecurityKey(
-                            Encoding.UTF8
-                                .GetBytes(
-                                    jwtKey
-                                )
+                            Encoding.UTF8.GetBytes(
+                                jwtKey
+                            )
                         ),
 
                     ClockSkew =
@@ -105,19 +109,23 @@ builder.Services
         }
     );
 
-builder.Services
-    .AddAuthorization();
+builder.Services.AddAuthorization();
 
 var app =
     builder.Build();
 
-if (
-    app.Environment
-        .IsDevelopment()
-)
+// =========================================
+// DEVELOPMENT
+// =========================================
+
+if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// =========================================
+// PIPELINE
+// =========================================
 
 app.UseHttpsRedirection();
 
@@ -131,14 +139,49 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// =========================================
+// HEALTH ENDPOINTS
+// =========================================
+
+/*
+    Liveness:
+    Is the API process itself running?
+*/
+
+app.MapHealthChecks(
+    "/health/live",
+    new HealthCheckOptions
+    {
+        Predicate =
+            _ => false
+    }
+);
+
+/*
+    Readiness:
+    Is the API ready to serve requests,
+    including access to MongoDB?
+*/
+
+app.MapHealthChecks(
+    "/health/ready",
+    new HealthCheckOptions
+    {
+        Predicate =
+            check =>
+                check.Tags.Contains(
+                    "ready"
+                )
+    }
+);
+
 app.Run();
 
 /*
-    WebApplicationFactory needs access to
-    the Program type from the test project.
-
-    This does not change production behavior.
+    Required by WebApplicationFactory
+    integration tests.
 */
+
 public partial class Program
 {
 }
