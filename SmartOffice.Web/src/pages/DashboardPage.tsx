@@ -44,6 +44,7 @@ import {
 import DashboardHeader from '../components/dashboard/DashboardHeader'
 import DashboardHero from '../components/dashboard/DashboardHero'
 import DashboardNavigation from '../components/dashboard/DashboardNavigation'
+import AdminOverviewPanel from '../components/dashboard/AdminOverviewPanel'
 
 import type {
   DashboardSection,
@@ -473,6 +474,7 @@ const DashboardPage =
 
           <Container
             maxWidth="xl"
+
             sx={{
               paddingTop: {
                 xs: 2.5,
@@ -512,6 +514,7 @@ const DashboardPage =
             {currentError && (
               <Alert
                 severity="error"
+
                 sx={{
                   marginBottom:
                     2,
@@ -546,7 +549,8 @@ const DashboardPage =
 
                     gridTemplateColumns:
                       {
-                        xs: '1fr',
+                        xs:
+                          '1fr',
 
                         sm:
                           'repeat(2, 1fr)',
@@ -563,73 +567,107 @@ const DashboardPage =
                 >
                   <SummaryCard
                     title="Total Resources"
+
                     value={
                       totalAssets
                     }
+
                     subtitle="Office assets"
+
                     icon={
                       <Inventory2OutlinedIcon />
                     }
+
                     accent="#202337"
                   />
 
                   <SummaryCard
                     title="Available"
+
                     value={
                       availableAssets
                     }
+
                     subtitle="Available right now"
+
                     icon={
                       <Inventory2OutlinedIcon />
                     }
+
                     accent="#78c948"
                   />
 
                   <SummaryCard
                     title="Meeting Rooms"
+
                     value={
                       rooms.length
                     }
+
                     subtitle="Shared rooms"
+
                     icon={
                       <MeetingRoomOutlinedIcon />
                     }
+
                     accent="#18aaa3"
                   />
 
                   <SummaryCard
                     title="Desks"
+
                     value={
                       desks.length
                     }
+
                     subtitle="Work stations"
+
                     icon={
                       <DeskOutlinedIcon />
                     }
+
                     accent="#687085"
                   />
 
                   <SummaryCard
                     title="My Bookings"
+
                     value={
                       myFutureReservations
                     }
+
                     subtitle="Upcoming bookings"
+
                     icon={
                       <CalendarMonthOutlinedIcon />
                     }
+
                     accent="#159f99"
                   />
                 </Box>
+
+                {/* ADMIN CONTROL CENTER */}
+
+                {authStore.isAdmin && (
+                  <AdminOverviewPanel
+                    onNavigate={
+                      setActiveSection
+                    }
+                  />
+                )}
 
                 <MyReservationsPanel />
 
                 <Paper
                   elevation={0}
+
                   sx={{
                     padding: {
-                      xs: 2,
-                      md: 2.5,
+                      xs:
+                        2,
+
+                      md:
+                        2.5,
                     },
 
                     display:
@@ -667,14 +705,17 @@ const DashboardPage =
                       alignItems:
                         'center',
 
-                      gap: 1.2,
+                      gap:
+                        1.2,
                     }}
                   >
                     <Box
                       sx={{
-                        width: 46,
+                        width:
+                          46,
 
-                        height: 46,
+                        height:
+                          46,
 
                         display:
                           'flex',
