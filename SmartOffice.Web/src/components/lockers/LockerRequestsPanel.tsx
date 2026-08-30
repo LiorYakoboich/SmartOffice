@@ -22,6 +22,10 @@ import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlin
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
 import {
+  authStore,
+} from '../../stores/AuthStore'
+
+import {
   lockerStore,
 } from '../../stores/LockerStore'
 
@@ -62,6 +66,16 @@ const LockerRequestsPanel =
         useState<RequestView>(
           'action'
         )
+
+      // =========================================
+      // ADMIN ONLY
+      // =========================================
+
+      if (
+        !authStore.isAdmin
+      ) {
+        return null
+      }
 
       const needsAction =
         lockerStore

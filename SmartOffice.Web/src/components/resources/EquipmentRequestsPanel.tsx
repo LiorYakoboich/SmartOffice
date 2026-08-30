@@ -22,6 +22,10 @@ import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined'
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined'
 
 import {
+  authStore,
+} from '../../stores/AuthStore'
+
+import {
   equipmentRequestStore,
 } from '../../stores/EquipmentRequestStore'
 
@@ -66,6 +70,16 @@ const EquipmentRequestsPanel =
         useState<RequestView>(
           'action'
         )
+
+      // =========================================
+      // ADMIN ONLY
+      // =========================================
+
+      if (
+        !authStore.isAdmin
+      ) {
+        return null
+      }
 
       const needsAction =
         equipmentRequestStore
