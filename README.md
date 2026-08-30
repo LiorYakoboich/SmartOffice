@@ -1,16 +1,16 @@
-\# SmartOffice
+﻿# SmartOffice
 
 
 
-\[!\[SmartOffice CI](https://github.com/LiorYakoboich/SmartOffice/actions/workflows/ci.yml/badge.svg)](https://github.com/LiorYakoboich/SmartOffice/actions/workflows/ci.yml)
+[![SmartOffice CI](https://github.com/LiorYakoboich/SmartOffice/actions/workflows/ci.yml/badge.svg)](https://github.com/LiorYakoboich/SmartOffice/actions/workflows/ci.yml)
 
 
 
-\*\*SmartOffice\*\* is a full-stack workplace management platform for managing meeting rooms, lockers, office resources, equipment requests, reservations, users and administrative workflows from one centralized application.
+**SmartOffice** is a full-stack workplace management platform for managing meeting rooms, lockers, office resources, equipment requests, reservations, users and administrative workflows from one centralized application.
 
 
 
-The system is built with a service-oriented backend architecture using \*\*ASP.NET Core, React, TypeScript, SQL Server, MongoDB, JWT authentication, Docker, automated testing and GitHub Actions CI\*\*.
+The system is built with a service-oriented backend architecture using **ASP.NET Core, React, TypeScript, SQL Server, MongoDB, JWT authentication, Docker, automated testing and GitHub Actions CI**.
 
 
 
@@ -18,9 +18,9 @@ SmartOffice supports two roles:
 
 
 
-\- \*\*Member\*\* — books rooms and requests workplace resources.
+- **Member** â€” books rooms and requests workplace resources.
 
-\- \*\*Admin\*\* — manages resources, requests, users and operational workflows.
+- **Admin** â€” manages resources, requests, users and operational workflows.
 
 
 
@@ -28,15 +28,15 @@ Authorization is enforced on the backend as well as reflected in the frontend UI
 
 
 
-\---
+---
 
 
 
-\## Application Preview
+## Application Preview
 
 
 
-\### Admin Dashboard
+### Admin Dashboard
 
 
 
@@ -44,15 +44,15 @@ The Admin dashboard provides a high-level operational view of workplace activity
 
 
 
-!\[SmartOffice Admin Dashboard](docs/screenshots/dashboard-admin.png)
+![SmartOffice Admin Dashboard](docs/screenshots/dashboard-admin.png)
 
 
 
-\---
+---
 
 
 
-\### Meeting Rooms
+### Meeting Rooms
 
 
 
@@ -60,15 +60,15 @@ Users can browse meeting rooms, inspect reservations and book available time slo
 
 
 
-!\[SmartOffice Meeting Rooms](docs/screenshots/meeting-rooms.png)
+![SmartOffice Meeting Rooms](docs/screenshots/meeting-rooms.png)
 
 
 
-\---
+---
 
 
 
-\### Locker Management
+### Locker Management
 
 
 
@@ -76,15 +76,15 @@ The locker center provides a floor-based visual inventory with workflow-aware st
 
 
 
-!\[SmartOffice Locker Management](docs/screenshots/lockers.png)
+![SmartOffice Locker Management](docs/screenshots/lockers.png)
 
 
 
-\---
+---
 
 
 
-\### Office Resources
+### Office Resources
 
 
 
@@ -92,15 +92,15 @@ Admins can manage office equipment and shared resources while processing equipme
 
 
 
-!\[SmartOffice Office Resources](docs/screenshots/resources.png)
+![SmartOffice Office Resources](docs/screenshots/resources.png)
 
 
 
-\---
+---
 
 
 
-\### User Management
+### User Management
 
 
 
@@ -108,19 +108,19 @@ Admins can search users, review role distribution and manage Member/Admin permis
 
 
 
-!\[SmartOffice User Management](docs/screenshots/user-management.png)
+![SmartOffice User Management](docs/screenshots/user-management.png)
 
 
 
-\---
+---
 
 
 
-\## Key Features
+## Key Features
 
 
 
-\### Authentication \& Authorization
+### Authentication & Authorization
 
 
 
@@ -128,29 +128,29 @@ SmartOffice includes a complete authentication and authorization flow:
 
 
 
-\- User registration
+- User registration
 
-\- User login
+- User login
 
-\- Secure password hashing
+- Secure password hashing
 
-\- JWT token generation
+- JWT token generation
 
-\- JWT Bearer authentication
+- JWT Bearer authentication
 
-\- Member and Admin roles
+- Member and Admin roles
 
-\- Backend role-based authorization
+- Backend role-based authorization
 
-\- Protected Admin endpoints
+- Protected Admin endpoints
 
-\- Role-aware frontend navigation
+- Role-aware frontend navigation
 
-\- Admin user management
+- Admin user management
 
-\- Protection against Admin self-demotion
+- Protection against Admin self-demotion
 
-\- Public registration restricted to the Member role
+- Public registration restricted to the Member role
 
 
 
@@ -158,11 +158,11 @@ Passwords are never stored in plain text.
 
 
 
-\---
+---
 
 
 
-\## Meeting Room Management
+## Meeting Room Management
 
 
 
@@ -170,15 +170,15 @@ Members can:
 
 
 
-\- Browse meeting rooms
+- Browse meeting rooms
 
-\- View room details and features
+- View room details and features
 
-\- View existing reservations
+- View existing reservations
 
-\- Reserve available time slots
+- Reserve available time slots
 
-\- Cancel their own reservations
+- Cancel their own reservations
 
 
 
@@ -186,13 +186,13 @@ Admins can:
 
 
 
-\- Manage room information
+- Manage room information
 
-\- Change operational status
+- Change operational status
 
-\- Cancel reservations
+- Cancel reservations
 
-\- Place rooms under maintenance
+- Place rooms under maintenance
 
 
 
@@ -200,15 +200,15 @@ The backend validates reservation rules and prevents:
 
 
 
-\- Overlapping bookings
+- Overlapping bookings
 
-\- Reservations in the past
+- Reservations in the past
 
-\- Invalid date/time ranges
+- Invalid date/time ranges
 
-\- Reservations for rooms under maintenance
+- Reservations for rooms under maintenance
 
-\- Conflicting reservations
+- Conflicting reservations
 
 
 
@@ -216,11 +216,11 @@ Room availability can also be derived from reservation activity rather than rely
 
 
 
-\---
+---
 
 
 
-\## Locker Management
+## Locker Management
 
 
 
@@ -228,21 +228,21 @@ SmartOffice contains a structured locker workflow across two office floors.
 
 
 
-\### Locker Inventory
+### Locker Inventory
 
 
 
 ```text
 
-Floor 15 → 50 lockers
+Floor 15 â†’ 50 lockers
 
-Floor 16 → 50 lockers
+Floor 16 â†’ 50 lockers
 
 ```
 
 
 
-\### Locker Request Workflow
+### Locker Request Workflow
 
 
 
@@ -250,15 +250,15 @@ Floor 16 → 50 lockers
 
 Pending
 
-&#x20;  ↓
+   â†“
 
 Approved
 
-&#x20;  ↓
+   â†“
 
 Collected
 
-&#x20;  ↓
+   â†“
 
 Returned
 
@@ -280,7 +280,7 @@ Cancelled
 
 
 
-\### Member Capabilities
+### Member Capabilities
 
 
 
@@ -288,19 +288,19 @@ Members can:
 
 
 
-\- Browse lockers by floor
+- Browse lockers by floor
 
-\- Filter locker availability
+- Filter locker availability
 
-\- Request an available locker key
+- Request an available locker key
 
-\- Track their current request
+- Track their current request
 
-\- Cancel an eligible request
+- Cancel an eligible request
 
 
 
-\### Admin Capabilities
+### Admin Capabilities
 
 
 
@@ -308,25 +308,25 @@ Admins can:
 
 
 
-\- Review pending locker requests
+- Review pending locker requests
 
-\- Approve requests
+- Approve requests
 
-\- Reject requests
+- Reject requests
 
-\- Mark keys as collected
+- Mark keys as collected
 
-\- Mark keys as returned
+- Mark keys as returned
 
-\- Manage locker availability
+- Manage locker availability
 
-\- Place lockers into maintenance
+- Place lockers into maintenance
 
-\- View active assignments
+- View active assignments
 
 
 
-\### Business Rules
+### Business Rules
 
 
 
@@ -334,23 +334,23 @@ The backend prevents:
 
 
 
-\- Multiple active locker workflows for the same member
+- Multiple active locker workflows for the same member
 
-\- Multiple active requests for the same locker
+- Multiple active requests for the same locker
 
-\- Requests for unavailable lockers
+- Requests for unavailable lockers
 
-\- Unauthorized request cancellation
+- Unauthorized request cancellation
 
-\- Taking a locker offline during an active workflow
-
-
-
-\---
+- Taking a locker offline during an active workflow
 
 
 
-\## Equipment Request Workflow
+---
+
+
+
+## Equipment Request Workflow
 
 
 
@@ -366,15 +366,15 @@ The request lifecycle is:
 
 Pending
 
-&#x20;  ↓
+   â†“
 
 Approved
 
-&#x20;  ↓
+   â†“
 
 Collected
 
-&#x20;  ↓
+   â†“
 
 Returned
 
@@ -386,13 +386,13 @@ Admins can:
 
 
 
-\- Approve requests
+- Approve requests
 
-\- Reject requests
+- Reject requests
 
-\- Mark equipment as collected
+- Mark equipment as collected
 
-\- Mark equipment as returned
+- Mark equipment as returned
 
 
 
@@ -402,7 +402,7 @@ When equipment is collected:
 
 ```text
 
-Asset Status → In Use
+Asset Status â†’ In Use
 
 ```
 
@@ -414,7 +414,7 @@ When it is returned:
 
 ```text
 
-Asset Status → Available
+Asset Status â†’ Available
 
 ```
 
@@ -428,11 +428,11 @@ The system also prevents conflicting active requests and invalid workflow transi
 
 
 
-\---
+---
 
 
 
-\## Office Resource Management
+## Office Resource Management
 
 
 
@@ -440,13 +440,13 @@ SmartOffice supports multiple types of workplace assets, including:
 
 
 
-\- Equipment
+- Equipment
 
-\- Desks
+- Desks
 
-\- Shared resources
+- Shared resources
 
-\- Meeting rooms
+- Meeting rooms
 
 
 
@@ -454,19 +454,19 @@ Resource information can include:
 
 
 
-\- Name
+- Name
 
-\- Type
+- Type
 
-\- Category
+- Category
 
-\- Floor
+- Floor
 
-\- Description
+- Description
 
-\- Features
+- Features
 
-\- Operational status
+- Operational status
 
 
 
@@ -474,13 +474,13 @@ Admins can:
 
 
 
-\- Create resources
+- Create resources
 
-\- Update resources
+- Update resources
 
-\- Delete resources
+- Delete resources
 
-\- Change availability and maintenance state
+- Change availability and maintenance state
 
 
 
@@ -488,11 +488,11 @@ Members can browse resources and interact with the workflows permitted for their
 
 
 
-\---
+---
 
 
 
-\## Admin Dashboard
+## Admin Dashboard
 
 
 
@@ -504,19 +504,19 @@ It highlights:
 
 
 
-\- Locker actions requiring attention
+- Locker actions requiring attention
 
-\- Equipment requests requiring attention
+- Equipment requests requiring attention
 
-\- Resources under maintenance
+- Resources under maintenance
 
-\- Rooms currently in use
+- Rooms currently in use
 
-\- Recent request activity
+- Recent request activity
 
-\- Resource totals
+- Resource totals
 
-\- Current availability
+- Current availability
 
 
 
@@ -524,11 +524,11 @@ This allows an Admin to quickly identify pending work without visiting every man
 
 
 
-\---
+---
 
 
 
-\# Architecture
+# Architecture
 
 
 
@@ -540,61 +540,61 @@ SmartOffice separates identity management from workplace resource management int
 
 flowchart LR
 
-&#x20;   User\[User Browser]
+    User[User Browser]
 
 
 
-&#x20;   Web\[React + TypeScript<br/>SmartOffice.Web]
+    Web[React + TypeScript<br/>SmartOffice.Web]
 
 
 
-&#x20;   Auth\[Auth Service<br/>ASP.NET Core]
+    Auth[Auth Service<br/>ASP.NET Core]
 
 
 
-&#x20;   Assets\[Asset Service<br/>ASP.NET Core]
+    Assets[Asset Service<br/>ASP.NET Core]
 
 
 
-&#x20;   SQL\[(SQL Server)]
+    SQL[(SQL Server)]
 
 
 
-&#x20;   Mongo\[(MongoDB)]
+    Mongo[(MongoDB)]
 
 
 
-&#x20;   User --> Web
+    User --> Web
 
 
 
-&#x20;   Web -->|Login / Registration / Users| Auth
+    Web -->|Login / Registration / Users| Auth
 
-&#x20;   Web -->|Rooms / Assets / Lockers / Requests| Assets
-
-
-
-&#x20;   Auth --> SQL
-
-&#x20;   Assets --> Mongo
+    Web -->|Rooms / Assets / Lockers / Requests| Assets
 
 
 
-&#x20;   Auth -->|JWT| Web
+    Auth --> SQL
 
-&#x20;   Web -->|Bearer Token| Auth
+    Assets --> Mongo
 
-&#x20;   Web -->|Bearer Token| Assets
+
+
+    Auth -->|JWT| Web
+
+    Web -->|Bearer Token| Auth
+
+    Web -->|Bearer Token| Assets
 
 ```
 
 
 
-\---
+---
 
 
 
-\## Backend Services
+## Backend Services
 
 
 
@@ -608,7 +608,7 @@ flowchart LR
 
 
 
-\### AuthService
+### AuthService
 
 
 
@@ -616,21 +616,21 @@ Responsible for:
 
 
 
-\- Registration
+- Registration
 
-\- Login
+- Login
 
-\- Password hashing
+- Password hashing
 
-\- JWT generation
+- JWT generation
 
-\- User management
+- User management
 
-\- Role management
+- Role management
 
 
 
-\### AssetService
+### AssetService
 
 
 
@@ -638,27 +638,27 @@ Responsible for:
 
 
 
-\- Office assets
+- Office assets
 
-\- Meeting rooms
+- Meeting rooms
 
-\- Reservations
+- Reservations
 
-\- Lockers
+- Lockers
 
-\- Locker requests
+- Locker requests
 
-\- Equipment requests
+- Equipment requests
 
-\- Resource workflow state
-
-
-
-\---
+- Resource workflow state
 
 
 
-\## Frontend Architecture
+---
+
+
+
+## Frontend Architecture
 
 
 
@@ -670,133 +670,133 @@ The frontend is responsible for:
 
 
 
-\- Authentication state
+- Authentication state
 
-\- Role-aware navigation
+- Role-aware navigation
 
-\- API communication
+- API communication
 
-\- Application state
+- Application state
 
-\- Dashboard rendering
+- Dashboard rendering
 
-\- Forms and dialogs
+- Forms and dialogs
 
-\- Resource management UI
+- Resource management UI
 
-\- Reservation workflows
+- Reservation workflows
 
-\- Locker workflows
+- Locker workflows
 
-\- Equipment workflows
+- Equipment workflows
 
 
 
-Application state is managed using \*\*MobX\*\*.
+Application state is managed using **MobX**.
 
 
 
-The UI is built with \*\*Material UI\*\*.
+The UI is built with **Material UI**.
 
 
 
-\---
+---
 
 
 
-\# Technology Stack
+# Technology Stack
 
 
 
-\## Backend
+## Backend
 
 
 
-\- C#
+- C#
 
-\- .NET 10
+- .NET 10
 
-\- ASP.NET Core Web API
+- ASP.NET Core Web API
 
-\- Entity Framework Core
+- Entity Framework Core
 
-\- ASP.NET Core Identity `PasswordHasher`
+- ASP.NET Core Identity `PasswordHasher`
 
-\- JWT Bearer Authentication
+- JWT Bearer Authentication
 
-\- SQL Server
+- SQL Server
 
-\- MongoDB
+- MongoDB
 
 
 
-\## Frontend
+## Frontend
 
 
 
-\- React
+- React
 
-\- TypeScript
+- TypeScript
 
-\- Vite
+- Vite
 
-\- Material UI
+- Material UI
 
-\- MobX
+- MobX
 
-\- Fetch API
+- Fetch API
 
 
 
-\## Testing
+## Testing
 
 
 
-\- xUnit
+- xUnit
 
-\- ASP.NET Core `WebApplicationFactory`
+- ASP.NET Core `WebApplicationFactory`
 
-\- Entity Framework Core InMemory provider
+- Entity Framework Core InMemory provider
 
-\- MongoDB integration testing
+- MongoDB integration testing
 
-\- Vitest
+- Vitest
 
-\- React Testing Library
+- React Testing Library
 
-\- jsdom
+- jsdom
 
 
 
-\## DevOps \& Infrastructure
+## DevOps & Infrastructure
 
 
 
-\- Docker
+- Docker
 
-\- Docker Compose
+- Docker Compose
 
-\- Git
+- Git
 
-\- GitHub
+- GitHub
 
-\- GitHub Actions
+- GitHub Actions
 
-\- Automated CI
+- Automated CI
 
-\- ASP.NET Core Health Checks
+- ASP.NET Core Health Checks
 
 
 
-\---
+---
 
 
 
-\# Automated Testing
+# Automated Testing
 
 
 
-SmartOffice currently contains \*\*69 automated tests\*\* across the backend and frontend.
+SmartOffice currently contains **69 automated tests** across the backend and frontend.
 
 
 
@@ -810,7 +810,7 @@ SmartOffice currently contains \*\*69 automated tests\*\* across the backend and
 
 | React Frontend | 13 |
 
-| \*\*Total\*\* | \*\*69\*\* |
+| **Total** | **69** |
 
 
 
@@ -818,117 +818,117 @@ The automated test suite covers several layers of the application.
 
 
 
-\### Authentication
+### Authentication
 
 
 
-\- User registration
+- User registration
 
-\- Password hashing
+- Password hashing
 
-\- Login validation
+- Login validation
 
-\- Case-insensitive usernames
+- Case-insensitive usernames
 
-\- Duplicate usernames
+- Duplicate usernames
 
-\- Invalid passwords
+- Invalid passwords
 
-\- JWT generation
+- JWT generation
 
 
 
-\### User Management
+### User Management
 
 
 
-\- User listing
+- User listing
 
-\- Role changes
+- Role changes
 
-\- Invalid role validation
+- Invalid role validation
 
-\- Self-demotion protection
+- Self-demotion protection
 
-\- Legacy user display behavior
+- Legacy user display behavior
 
 
 
-\### Reservations
+### Reservations
 
 
 
-\- Reservation creation
+- Reservation creation
 
-\- Overlapping reservation detection
+- Overlapping reservation detection
 
-\- Back-to-back reservations
+- Back-to-back reservations
 
-\- Invalid time ranges
+- Invalid time ranges
 
-\- Past reservations
+- Past reservations
 
-\- Maintenance protection
+- Maintenance protection
 
-\- Reservation ownership
+- Reservation ownership
 
-\- Cancellation authorization
+- Cancellation authorization
 
 
 
-\### Lockers
+### Lockers
 
 
 
-\- Locker requests
+- Locker requests
 
-\- Active-request constraints
+- Active-request constraints
 
-\- Locker availability
+- Locker availability
 
-\- Request ownership
+- Request ownership
 
-\- Cancellation rules
+- Cancellation rules
 
-\- Approval
+- Approval
 
-\- Rejection
+- Rejection
 
-\- Collection
+- Collection
 
-\- Return workflow
+- Return workflow
 
-\- Locker status management
+- Locker status management
 
 
 
-\### Equipment
+### Equipment
 
 
 
-\- Equipment requests
+- Equipment requests
 
-\- Asset type validation
+- Asset type validation
 
-\- Asset availability validation
+- Asset availability validation
 
-\- Duplicate request protection
+- Duplicate request protection
 
-\- Request cancellation
+- Request cancellation
 
-\- Approval
+- Approval
 
-\- Rejection
+- Rejection
 
-\- Equipment collection
+- Equipment collection
 
-\- Asset status changes
+- Asset status changes
 
-\- Equipment return
+- Equipment return
 
 
 
-\### HTTP Authorization Integration Tests
+### HTTP Authorization Integration Tests
 
 
 
@@ -942,23 +942,23 @@ These verify scenarios such as:
 
 ```text
 
-No Token       → Admin Endpoint  → 401 Unauthorized
+No Token       â†’ Admin Endpoint  â†’ 401 Unauthorized
 
 
 
-Member Token   → Admin Endpoint  → 403 Forbidden
+Member Token   â†’ Admin Endpoint  â†’ 403 Forbidden
 
 
 
-Admin Token    → Admin Endpoint  → 200 OK
+Admin Token    â†’ Admin Endpoint  â†’ 200 OK
 
 
 
-Admin Token    → Member Endpoint → 403 Forbidden
+Admin Token    â†’ Member Endpoint â†’ 403 Forbidden
 
 
 
-Member Token   → Member Endpoint → 200 OK
+Member Token   â†’ Member Endpoint â†’ 200 OK
 
 ```
 
@@ -968,7 +968,7 @@ This verifies authorization through the actual ASP.NET Core HTTP pipeline rather
 
 
 
-\### Frontend Tests
+### Frontend Tests
 
 
 
@@ -976,29 +976,29 @@ React tests verify:
 
 
 
-\- Admin-only navigation
+- Admin-only navigation
 
-\- Member navigation restrictions
+- Member navigation restrictions
 
-\- Dashboard navigation behavior
+- Dashboard navigation behavior
 
-\- Locker Admin controls
+- Locker Admin controls
 
-\- Equipment Admin controls
+- Equipment Admin controls
 
-\- Role-specific component rendering
-
-
-
-\---
+- Role-specific component rendering
 
 
 
-\# Continuous Integration
+---
 
 
 
-SmartOffice uses \*\*GitHub Actions\*\* to automatically validate the application on every push and pull request to `main`.
+# Continuous Integration
+
+
+
+SmartOffice uses **GitHub Actions** to automatically validate the application on every push and pull request to `main`.
 
 
 
@@ -1010,31 +1010,31 @@ The workflow contains independent Backend and Frontend jobs.
 
 Push / Pull Request
 
-&#x20;       │
+        â”‚
 
-&#x20;       ├── Backend Tests
+        â”œâ”€â”€ Backend Tests
 
-&#x20;       │     ├── Start MongoDB
+        â”‚     â”œâ”€â”€ Start MongoDB
 
-&#x20;       │     ├── Setup .NET 10
+        â”‚     â”œâ”€â”€ Setup .NET 10
 
-&#x20;       │     ├── Restore dependencies
+        â”‚     â”œâ”€â”€ Restore dependencies
 
-&#x20;       │     ├── Run AuthService tests
+        â”‚     â”œâ”€â”€ Run AuthService tests
 
-&#x20;       │     └── Run AssetService tests
+        â”‚     â””â”€â”€ Run AssetService tests
 
-&#x20;       │
+        â”‚
 
-&#x20;       └── Frontend Tests \& Build
+        â””â”€â”€ Frontend Tests & Build
 
-&#x20;             ├── Setup Node.js
+              â”œâ”€â”€ Setup Node.js
 
-&#x20;             ├── npm ci
+              â”œâ”€â”€ npm ci
 
-&#x20;             ├── Run Vitest
+              â”œâ”€â”€ Run Vitest
 
-&#x20;             └── Production build
+              â””â”€â”€ Production build
 
 ```
 
@@ -1060,11 +1060,11 @@ Current workflow status is displayed at the top of this README.
 
 
 
-\---
+---
 
 
 
-\# Health Checks
+# Health Checks
 
 
 
@@ -1072,7 +1072,7 @@ Both backend services expose liveness and readiness endpoints.
 
 
 
-\## AuthService
+## AuthService
 
 
 
@@ -1098,15 +1098,15 @@ Checks whether the AuthService process is running.
 
 
 
-Checks whether AuthService is ready to serve requests and verifies connectivity to \*\*SQL Server\*\*.
+Checks whether AuthService is ready to serve requests and verifies connectivity to **SQL Server**.
 
 
 
-\---
+---
 
 
 
-\## AssetService
+## AssetService
 
 
 
@@ -1132,7 +1132,7 @@ Checks whether the AssetService process is running.
 
 
 
-Checks whether AssetService is ready to serve requests and verifies connectivity to \*\*MongoDB\*\*.
+Checks whether AssetService is ready to serve requests and verifies connectivity to **MongoDB**.
 
 
 
@@ -1140,11 +1140,11 @@ Separating liveness from readiness makes the services more suitable for containe
 
 
 
-\---
+---
 
 
 
-\# API Overview
+# API Overview
 
 
 
@@ -1174,11 +1174,11 @@ The frontend is not treated as a security boundary.
 
 
 
-\---
+---
 
 
 
-\# Project Structure
+# Project Structure
 
 
 
@@ -1186,111 +1186,111 @@ The frontend is not treated as a security boundary.
 
 SmartOffice/
 
-│
+â”‚
 
-├── .github/
+â”œâ”€â”€ .github/
 
-│   └── workflows/
+â”‚   â””â”€â”€ workflows/
 
-│       └── ci.yml
+â”‚       â””â”€â”€ ci.yml
 
-│
+â”‚
 
-├── docs/
+â”œâ”€â”€ docs/
 
-│   └── screenshots/
+â”‚   â””â”€â”€ screenshots/
 
-│       ├── dashboard-admin.png
+â”‚       â”œâ”€â”€ dashboard-admin.png
 
-│       ├── meeting-rooms.png
+â”‚       â”œâ”€â”€ meeting-rooms.png
 
-│       ├── lockers.png
+â”‚       â”œâ”€â”€ lockers.png
 
-│       ├── resources.png
+â”‚       â”œâ”€â”€ resources.png
 
-│       └── user-management.png
+â”‚       â””â”€â”€ user-management.png
 
-│
+â”‚
 
-├── SmartOffice.AuthService/
+â”œâ”€â”€ SmartOffice.AuthService/
 
-│   ├── Controllers/
+â”‚   â”œâ”€â”€ Controllers/
 
-│   ├── Data/
+â”‚   â”œâ”€â”€ Data/
 
-│   ├── DTOs/
+â”‚   â”œâ”€â”€ DTOs/
 
-│   ├── Health/
+â”‚   â”œâ”€â”€ Health/
 
-│   ├── Models/
+â”‚   â”œâ”€â”€ Models/
 
-│   └── Program.cs
+â”‚   â””â”€â”€ Program.cs
 
-│
+â”‚
 
-├── SmartOffice.AuthService.Tests/
+â”œâ”€â”€ SmartOffice.AuthService.Tests/
 
-│
+â”‚
 
-├── SmartOffice.AssetService/
+â”œâ”€â”€ SmartOffice.AssetService/
 
-│   ├── Controllers/
+â”‚   â”œâ”€â”€ Controllers/
 
-│   ├── Data/
+â”‚   â”œâ”€â”€ Data/
 
-│   ├── DTOs/
+â”‚   â”œâ”€â”€ DTOs/
 
-│   ├── Health/
+â”‚   â”œâ”€â”€ Health/
 
-│   ├── Models/
+â”‚   â”œâ”€â”€ Models/
 
-│   └── Program.cs
+â”‚   â””â”€â”€ Program.cs
 
-│
+â”‚
 
-├── SmartOffice.AssetService.Tests/
+â”œâ”€â”€ SmartOffice.AssetService.Tests/
 
-│
+â”‚
 
-├── SmartOffice.Web/
+â”œâ”€â”€ SmartOffice.Web/
 
-│   ├── src/
+â”‚   â”œâ”€â”€ src/
 
-│   │   ├── components/
+â”‚   â”‚   â”œâ”€â”€ components/
 
-│   │   ├── pages/
+â”‚   â”‚   â”œâ”€â”€ pages/
 
-│   │   ├── stores/
+â”‚   â”‚   â”œâ”€â”€ stores/
 
-│   │   └── test/
+â”‚   â”‚   â””â”€â”€ test/
 
-│   │
+â”‚   â”‚
 
-│   └── package.json
+â”‚   â””â”€â”€ package.json
 
-│
+â”‚
 
-├── docker-compose.yml
+â”œâ”€â”€ docker-compose.yml
 
-├── .env.example
+â”œâ”€â”€ .env.example
 
-├── .gitignore
+â”œâ”€â”€ .gitignore
 
-└── README.md
+â””â”€â”€ README.md
 
 ```
 
 
 
-\---
+---
 
 
 
-\# Getting Started
+# Getting Started
 
 
 
-\## Prerequisites
+## Prerequisites
 
 
 
@@ -1298,23 +1298,23 @@ Install the following:
 
 
 
-\- .NET 10 SDK
+- .NET 10 SDK
 
-\- Node.js 24+
+- Node.js 24+
 
-\- npm
+- npm
 
-\- Docker Desktop
+- Docker Desktop
 
-\- Git
-
-
-
-\---
+- Git
 
 
 
-\## 1. Clone the Repository
+---
+
+
+
+## 1. Clone the Repository
 
 
 
@@ -1328,11 +1328,11 @@ cd SmartOffice
 
 
 
-\---
+---
 
 
 
-\## 2. Configure Docker Environment
+## 2. Configure Docker Environment
 
 
 
@@ -1340,7 +1340,7 @@ Create a local `.env` file from the example:
 
 
 
-\### Windows PowerShell
+### Windows PowerShell
 
 
 
@@ -1358,7 +1358,7 @@ Configure a local SQL Server password inside `.env`:
 
 ```env
 
-MSSQL\_SA\_PASSWORD=YOUR\_STRONG\_LOCAL\_PASSWORD
+MSSQL_SA_PASSWORD=YOUR_STRONG_LOCAL_PASSWORD
 
 ```
 
@@ -1368,11 +1368,11 @@ MSSQL\_SA\_PASSWORD=YOUR\_STRONG\_LOCAL\_PASSWORD
 
 
 
-\---
+---
 
 
 
-\## 3. Start the Databases
+## 3. Start the Databases
 
 
 
@@ -1390,9 +1390,9 @@ Docker starts:
 
 ```text
 
-SQL Server → localhost:1433
+SQL Server â†’ localhost:1433
 
-MongoDB    → localhost:27017
+MongoDB    â†’ localhost:27017
 
 ```
 
@@ -1410,11 +1410,11 @@ docker compose ps
 
 
 
-\---
+---
 
 
 
-\## 4. Configure AuthService
+## 4. Configure AuthService
 
 
 
@@ -1428,7 +1428,7 @@ Configure the SQL Server connection string:
 
 ```powershell
 
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=SmartOfficeAuthDb;User Id=sa;Password=YOUR\_STRONG\_LOCAL\_PASSWORD;TrustServerCertificate=True;" --project SmartOffice.AuthService
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=SmartOfficeAuthDb;User Id=sa;Password=YOUR_STRONG_LOCAL_PASSWORD;TrustServerCertificate=True;" --project SmartOffice.AuthService
 
 ```
 
@@ -1440,17 +1440,17 @@ Configure a JWT signing key:
 
 ```powershell
 
-dotnet user-secrets set "Jwt:Key" "YOUR\_LOCAL\_DEVELOPMENT\_JWT\_KEY" --project SmartOffice.AuthService
+dotnet user-secrets set "Jwt:Key" "YOUR_LOCAL_DEVELOPMENT_JWT_KEY" --project SmartOffice.AuthService
 
 ```
 
 
 
-\---
+---
 
 
 
-\## 5. Configure AssetService
+## 5. Configure AssetService
 
 
 
@@ -1470,23 +1470,23 @@ The AssetService validates JWT tokens created by AuthService.
 
 
 
-Therefore, configure the \*\*same JWT signing key\*\*:
+Therefore, configure the **same JWT signing key**:
 
 
 
 ```powershell
 
-dotnet user-secrets set "Jwt:Key" "YOUR\_LOCAL\_DEVELOPMENT\_JWT\_KEY" --project SmartOffice.AssetService
+dotnet user-secrets set "Jwt:Key" "YOUR_LOCAL_DEVELOPMENT_JWT_KEY" --project SmartOffice.AssetService
 
 ```
 
 
 
-\---
+---
 
 
 
-\## 6. Start AuthService
+## 6. Start AuthService
 
 
 
@@ -1510,11 +1510,11 @@ https://localhost:7195
 
 
 
-\---
+---
 
 
 
-\## 7. Start AssetService
+## 7. Start AssetService
 
 
 
@@ -1542,11 +1542,11 @@ https://localhost:7244
 
 
 
-\---
+---
 
 
 
-\## 8. Start the Frontend
+## 8. Start the Frontend
 
 
 
@@ -1578,15 +1578,15 @@ http://localhost:5173
 
 
 
-\---
+---
 
 
 
-\# Running Tests
+# Running Tests
 
 
 
-\## AuthService
+## AuthService
 
 
 
@@ -1610,11 +1610,11 @@ Expected:
 
 
 
-\---
+---
 
 
 
-\## AssetService
+## AssetService
 
 
 
@@ -1642,11 +1642,11 @@ Expected:
 
 
 
-\---
+---
 
 
 
-\## Frontend
+## Frontend
 
 
 
@@ -1672,11 +1672,11 @@ Expected:
 
 
 
-\---
+---
 
 
 
-\# Security
+# Security
 
 
 
@@ -1684,31 +1684,31 @@ SmartOffice applies multiple security practices:
 
 
 
-\- Passwords are hashed before storage
+- Passwords are hashed before storage
 
-\- Plain-text passwords are never persisted
+- Plain-text passwords are never persisted
 
-\- JWT signatures are validated
+- JWT signatures are validated
 
-\- JWT issuer is validated
+- JWT issuer is validated
 
-\- JWT audience is validated
+- JWT audience is validated
 
-\- JWT lifetime is validated
+- JWT lifetime is validated
 
-\- Backend endpoints enforce role authorization
+- Backend endpoints enforce role authorization
 
-\- Admin operations are protected server-side
+- Admin operations are protected server-side
 
-\- Public registration cannot create Admin users
+- Public registration cannot create Admin users
 
-\- Admin self-demotion is protected
+- Admin self-demotion is protected
 
-\- Local secrets are stored outside tracked configuration
+- Local secrets are stored outside tracked configuration
 
-\- `.env` is excluded from Git
+- `.env` is excluded from Git
 
-\- Development secrets can be managed using .NET User Secrets
+- Development secrets can be managed using .NET User Secrets
 
 
 
@@ -1716,15 +1716,15 @@ Production environments should use a dedicated secret-management platform rather
 
 
 
-\---
+---
 
 
 
-\# Engineering Decisions
+# Engineering Decisions
 
 
 
-\## Why SQL Server for Authentication?
+## Why SQL Server for Authentication?
 
 
 
@@ -1736,13 +1736,13 @@ SQL Server with Entity Framework Core provides:
 
 
 
-\- Structured user records
+- Structured user records
 
-\- Strong schema support
+- Strong schema support
 
-\- Familiar relational querying
+- Familiar relational querying
 
-\- Straightforward persistence for authentication data
+- Straightforward persistence for authentication data
 
 
 
@@ -1750,11 +1750,11 @@ For this reason, SmartOffice keeps identity-related data in its own SQL-backed s
 
 
 
-\---
+---
 
 
 
-\## Why MongoDB for Workplace Resources?
+## Why MongoDB for Workplace Resources?
 
 
 
@@ -1766,17 +1766,17 @@ MongoDB provides a convenient document model for:
 
 
 
-\- Assets
+- Assets
 
-\- Meeting rooms
+- Meeting rooms
 
-\- Reservations
+- Reservations
 
-\- Lockers
+- Lockers
 
-\- Locker requests
+- Locker requests
 
-\- Equipment workflows
+- Equipment workflows
 
 
 
@@ -1784,11 +1784,11 @@ This also demonstrates using different persistence technologies where they fit d
 
 
 
-\---
+---
 
 
 
-\## Why Separate Backend Services?
+## Why Separate Backend Services?
 
 
 
@@ -1800,15 +1800,15 @@ Separating them provides:
 
 
 
-\- Clearer responsibilities
+- Clearer responsibilities
 
-\- Independent persistence
+- Independent persistence
 
-\- Smaller service boundaries
+- Smaller service boundaries
 
-\- Easier future scaling
+- Easier future scaling
 
-\- Reduced coupling
+- Reduced coupling
 
 
 
@@ -1816,11 +1816,11 @@ AuthService issues JWT tokens while AssetService validates them.
 
 
 
-\---
+---
 
 
 
-\## Why Enforce Authorization on the Backend?
+## Why Enforce Authorization on the Backend?
 
 
 
@@ -1834,7 +1834,7 @@ For example:
 
 ```text
 
-Member → Admin API Endpoint → Forbidden
+Member â†’ Admin API Endpoint â†’ Forbidden
 
 ```
 
@@ -1848,11 +1848,11 @@ The integration test suite verifies this behavior through real HTTP requests.
 
 
 
-\---
+---
 
 
 
-\## Why Separate Liveness and Readiness?
+## Why Separate Liveness and Readiness?
 
 
 
@@ -1868,7 +1868,7 @@ SmartOffice distinguishes:
 
 Liveness
 
-&#x20;   ↓
+    â†“
 
 Is the API process running?
 
@@ -1876,7 +1876,7 @@ Is the API process running?
 
 Readiness
 
-&#x20;   ↓
+    â†“
 
 Can the API actually serve requests?
 
@@ -1896,11 +1896,11 @@ This approach is commonly used in containerized environments and production moni
 
 
 
-\---
+---
 
 
 
-\# Future Improvements
+# Future Improvements
 
 
 
@@ -1908,41 +1908,41 @@ Possible future enhancements include:
 
 
 
-\- Containerizing AuthService, AssetService and the React frontend
+- Containerizing AuthService, AssetService and the React frontend
 
-\- Full application startup through Docker Compose
+- Full application startup through Docker Compose
 
-\- Refresh-token support
+- Refresh-token support
 
-\- Secure HTTP-only cookie authentication
+- Secure HTTP-only cookie authentication
 
-\- Database-level unique username constraints
+- Database-level unique username constraints
 
-\- MongoDB indexes for workflow constraints
+- MongoDB indexes for workflow constraints
 
-\- Stronger concurrency protection
+- Stronger concurrency protection
 
-\- Structured API error responses
+- Structured API error responses
 
-\- React Router navigation
+- React Router navigation
 
-\- Centralized logging
+- Centralized logging
 
-\- Metrics and observability
+- Metrics and observability
 
-\- Cloud deployment
+- Cloud deployment
 
-\- End-to-end browser testing
+- End-to-end browser testing
 
-\- Automated deployment pipeline
-
-
-
-\---
+- Automated deployment pipeline
 
 
 
-\# What This Project Demonstrates
+---
+
+
+
+# What This Project Demonstrates
 
 
 
@@ -1954,51 +1954,52 @@ The project demonstrates practical experience with:
 
 
 
-\- Full-stack application development
+- Full-stack application development
 
-\- React and TypeScript
+- React and TypeScript
 
-\- ASP.NET Core APIs
+- ASP.NET Core APIs
 
-\- C#
+- C#
 
-\- SQL and NoSQL databases
+- SQL and NoSQL databases
 
-\- Authentication
+- Authentication
 
-\- JWT
+- JWT
 
-\- Role-based authorization
+- Role-based authorization
 
-\- Business-rule validation
+- Business-rule validation
 
-\- Service separation
+- Service separation
 
-\- State management
+- State management
 
-\- Automated testing
+- Automated testing
 
-\- HTTP integration testing
+- HTTP integration testing
 
-\- Docker
+- Docker
 
-\- Health monitoring
+- Health monitoring
 
-\- Continuous Integration
+- Continuous Integration
 
-\- Git and GitHub workflows
-
-
-
-\---
+- Git and GitHub workflows
 
 
 
-\## Repository
+---
 
 
 
-\*\*GitHub:\*\*  
+## Repository
+
+
+
+**GitHub:**  
 
 https://github.com/LiorYakoboich/SmartOffice
+
 
