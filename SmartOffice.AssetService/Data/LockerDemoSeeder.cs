@@ -11,7 +11,7 @@ namespace SmartOffice.AssetService.Data
             Demo distribution PER FLOOR:
 
             001 - 035 -> Assigned
-            036 - 038 -> Pending HR Approval
+            036 - 038 -> Pending Admin Approval
             039 - 040 -> Ready for Key Pickup
             041 - 048 -> Available
             049 - 050 -> Maintenance
@@ -214,8 +214,8 @@ namespace SmartOffice.AssetService.Data
                     await mongoDbService
                         .ApproveLockerRequestAsync(
                             createdRequest.Id,
-                            "demo-hr-user",
-                            "HR Team"
+                            "demo-admin-user",
+                            "Admin Team"
                         );
 
                     await mongoDbService
@@ -247,8 +247,8 @@ namespace SmartOffice.AssetService.Data
                 await mongoDbService
                     .ApproveLockerRequestAsync(
                         createdRequest.Id,
-                        "demo-hr-user",
-                        "HR Team"
+                        "demo-admin-user",
+                        "Admin Team"
                     );
             }
         }

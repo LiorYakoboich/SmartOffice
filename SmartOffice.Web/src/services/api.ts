@@ -1,6 +1,9 @@
 export const AUTH_API_URL =
   'https://localhost:7195/api/auth'
 
+export const USERS_API_URL =
+  'https://localhost:7195/api/users'
+
 export const ASSET_API_URL =
   'https://localhost:7244/api/assets'
 
@@ -9,6 +12,9 @@ export const RESERVATION_API_URL =
 
 export const LOCKER_API_URL =
   'https://localhost:7244/api/lockers'
+
+export const EQUIPMENT_REQUEST_API_URL =
+  'https://localhost:7244/api/equipment-requests'
 
 export const UNAUTHORIZED_EVENT =
   'smartoffice:unauthorized'

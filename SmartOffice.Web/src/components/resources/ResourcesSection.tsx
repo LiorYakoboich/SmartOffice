@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -27,6 +28,7 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined'
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 
 import {
   assetStore,
@@ -36,11 +38,18 @@ import {
   authStore,
 } from '../../stores/AuthStore'
 
+import {
+  equipmentRequestStore,
+} from '../../stores/EquipmentRequestStore'
+
 import type {
   Asset,
 } from '../../stores/AssetStore'
 
-import ResourceVisual from './ResourceVisual'
+import ResourceCreature from './ResourceCreature'
+import ResourceDetailsDialog from './ResourceDetailsDialog'
+import MyEquipmentRequestsPanel from './MyEquipmentRequestsPanel'
+import EquipmentRequestsPanel from './EquipmentRequestsPanel'
 
 interface ResourcesSectionProps {
   onAddResource: () => void
@@ -183,6 +192,10 @@ const ResourcesSection =
       onAddResource,
       onEditResource,
     }: ResourcesSectionProps) => {
+      // =========================================
+      // FILTER STATE
+      // =========================================
+
       const [
         search,
         setSearch,
@@ -212,6 +225,10 @@ const ResourcesSection =
           'All'
         )
 
+      // =========================================
+      // RESOURCE ACTION STATE
+      // =========================================
+
       const [
         deletingId,
         setDeletingId,
@@ -219,9 +236,36 @@ const ResourcesSection =
         string | null
       >(null)
 
+      const [
+        detailsResource,
+        setDetailsResource,
+      ] = useState<
+        Asset | null
+      >(null)
+
+      // =========================================
+      // LOAD EQUIPMENT REQUESTS
+      // =========================================
+
+      useEffect(() => {
+        void equipmentRequestStore
+          .refresh()
+      }, [])
+
       // =========================================
       // RESOURCES
       // =========================================
+
+      /*
+        Rooms belong to Meeting Rooms.
+
+        Lockers belong to Locker Center.
+
+        This section only contains:
+        - Desks
+        - Equipment
+        - Shared Resources
+      */
 
       const allResources =
         useMemo(
@@ -242,6 +286,10 @@ const ResourcesSection =
             assetStore.assets,
           ]
         )
+
+      // =========================================
+      // FILTERED RESULTS
+      // =========================================
 
       const resources =
         useMemo(
@@ -324,11 +372,29 @@ const ResourcesSection =
           ]
         )
 
+      // =========================================
+      // SUMMARY
+      // =========================================
+
       const availableCount =
         allResources.filter(
           (resource) =>
             resource.status ===
             'Available'
+        ).length
+
+      const deskCount =
+        allResources.filter(
+          (resource) =>
+            resource.type ===
+            'Desk'
+        ).length
+
+      const equipmentCount =
+        allResources.filter(
+          (resource) =>
+            resource.type ===
+            'Equipment'
         ).length
 
       // =========================================
@@ -375,7 +441,7 @@ const ResourcesSection =
         }
 
       // =========================================
-      // FILTERS
+      // FILTER HELPERS
       // =========================================
 
       const hasFilters =
@@ -547,6 +613,23 @@ const ResourcesSection =
           </Box>
 
           {/* =====================================
+              MEMBER EQUIPMENT REQUESTS
+          ====================================== */}
+
+          {authStore.user?.role ===
+            'Member' && (
+            <MyEquipmentRequestsPanel />
+          )}
+
+          {/* =====================================
+              ADMIN EQUIPMENT REQUESTS
+          ====================================== */}
+
+          {authStore.isAdmin && (
+            <EquipmentRequestsPanel />
+          )}
+
+          {/* =====================================
               SUMMARY
           ====================================== */}
 
@@ -567,7 +650,8 @@ const ResourcesSection =
                     'repeat(4, 1fr)',
                 },
 
-              gap: 1,
+              gap:
+                1,
             }}
           >
             {[
@@ -592,11 +676,7 @@ const ResourcesSection =
                   'Desks',
 
                 value:
-                  allResources.filter(
-                    (item) =>
-                      item.type ===
-                      'Desk'
-                  ).length,
+                  deskCount,
               },
 
               {
@@ -604,11 +684,7 @@ const ResourcesSection =
                   'Equipment',
 
                 value:
-                  allResources.filter(
-                    (item) =>
-                      item.type ===
-                      'Equipment'
-                  ).length,
+                  equipmentCount,
               },
             ].map(
               (stat) => (
@@ -631,6 +707,9 @@ const ResourcesSection =
 
                     backgroundColor:
                       '#ffffff',
+
+                    boxShadow:
+                      '0 8px 24px rgba(23,24,44,.025)',
                   }}
                 >
                   <Typography
@@ -686,6 +765,7 @@ const ResourcesSection =
 
           <Paper
             elevation={0}
+
             sx={{
               marginBottom:
                 2,
@@ -701,6 +781,9 @@ const ResourcesSection =
 
               backgroundColor:
                 '#ffffff',
+
+              boxShadow:
+                '0 8px 24px rgba(23,24,44,.025)',
             }}
           >
             <Box
@@ -717,9 +800,12 @@ const ResourcesSection =
                       'minmax(260px, 1fr) auto auto',
                   },
 
-                gap: 1,
+                gap:
+                  1,
               }}
             >
+              {/* SEARCH */}
+
               <TextField
                 value={
                   search
@@ -767,9 +853,23 @@ const ResourcesSection =
 
                       backgroundColor:
                         '#fafbf9',
+
+                      '& fieldset':
+                        {
+                          borderColor:
+                            '#e3e6e1',
+                        },
+
+                      '&.Mui-focused fieldset':
+                        {
+                          borderColor:
+                            '#78c948',
+                        },
                     },
                 }}
               />
+
+              {/* FLOOR */}
 
               <TextField
                 select
@@ -816,6 +916,8 @@ const ResourcesSection =
                   Floor 16
                 </MenuItem>
               </TextField>
+
+              {/* STATUS */}
 
               <TextField
                 select
@@ -867,6 +969,8 @@ const ResourcesSection =
                 </MenuItem>
               </TextField>
             </Box>
+
+            {/* TYPE FILTER */}
 
             <Box
               sx={{
@@ -947,6 +1051,14 @@ const ResourcesSection =
 
                         fontWeight:
                           900,
+
+                        '&:hover':
+                          {
+                            background:
+                              selected
+                                ? 'linear-gradient(100deg, #4d9d30, #159b96)'
+                                : '#eef1ec',
+                          },
                       }}
                     >
                       {
@@ -987,7 +1099,7 @@ const ResourcesSection =
           </Paper>
 
           {/* =====================================
-              RESULTS COUNT
+              RESULT COUNT
           ====================================== */}
 
           <Typography
@@ -1021,6 +1133,7 @@ const ResourcesSection =
           0 ? (
             <Paper
               elevation={0}
+
               sx={{
                 minHeight:
                   230,
@@ -1037,7 +1150,8 @@ const ResourcesSection =
                 justifyContent:
                   'center',
 
-                padding: 3,
+                padding:
+                  3,
 
                 borderRadius:
                   '20px',
@@ -1165,7 +1279,7 @@ const ResourcesSection =
 
                       sx={{
                         minHeight:
-                          400,
+                          420,
 
                         padding:
                           1.5,
@@ -1205,10 +1319,10 @@ const ResourcesSection =
                       }}
                     >
                       {/* ===========================
-                          LARGE IMAGE
+                          ANIMATED RESOURCE
                       ============================ */}
 
-                      <ResourceVisual
+                      <ResourceCreature
                         resource={
                           resource
                         }
@@ -1538,7 +1652,7 @@ const ResourcesSection =
                           [])
                           .slice(
                             0,
-                            4
+                            3
                           )
                           .map(
                             (
@@ -1580,12 +1694,12 @@ const ResourcesSection =
 
                         {(resource.features ??
                           []).length >
-                          4 && (
+                          3 && (
                           <Chip
                             label={`+${
                               resource.features
                                 .length -
-                              4
+                              3
                             }`}
 
                             size="small"
@@ -1618,46 +1732,90 @@ const ResourcesSection =
                       />
 
                       {/* ===========================
-                          FOOTER
+                          VIEW DETAILS
                       ============================ */}
 
-                      <Typography
+                      <Button
+                        fullWidth
+
+                        endIcon={
+                          <OpenInNewOutlinedIcon />
+                        }
+
+                        onClick={() =>
+                          setDetailsResource(
+                            resource
+                          )
+                        }
+
                         sx={{
                           marginTop:
-                            1.3,
+                            1.4,
 
-                          paddingTop:
-                            1,
+                          minHeight:
+                            38,
+
+                          borderRadius:
+                            '11px',
 
                           color:
-                            '#acafb7',
+                            '#159f99',
 
-                          borderTop:
-                            '1px solid #eff1ee',
+                          backgroundColor:
+                            'rgba(24,170,163,.055)',
 
-                          fontSize:
-                            '0.57rem',
-
-                          fontWeight:
-                            800,
-
-                          letterSpacing:
-                            '0.05em',
+                          border:
+                            '1px solid rgba(24,170,163,.10)',
 
                           textTransform:
-                            'uppercase',
+                            'none',
+
+                          fontSize:
+                            '0.69rem',
+
+                          fontWeight:
+                            900,
+
+                          '&:hover':
+                            {
+                              color:
+                                '#ffffff',
+
+                              backgroundColor:
+                                '#159f99',
+                            },
                         }}
                       >
-                        {
-                          resource.type
-                        }
-                      </Typography>
+                        View Details
+                      </Button>
                     </Paper>
                   )
                 }
               )}
             </Box>
           )}
+
+          {/* =====================================
+              RESOURCE DETAILS
+          ====================================== */}
+
+          <ResourceDetailsDialog
+            open={
+              Boolean(
+                detailsResource
+              )
+            }
+
+            resource={
+              detailsResource
+            }
+
+            onClose={() =>
+              setDetailsResource(
+                null
+              )
+            }
+          />
         </Box>
       )
     }

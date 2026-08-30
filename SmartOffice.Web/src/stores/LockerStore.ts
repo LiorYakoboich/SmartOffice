@@ -122,6 +122,8 @@ class LockerStore {
 
   async loadLockers() {
     if (!authStore.token) {
+      this.lockers = []
+
       return
     }
 
@@ -158,6 +160,8 @@ class LockerStore {
       authStore.user?.role !==
         'Member'
     ) {
+      this.myRequests = []
+
       return
     }
 
@@ -185,8 +189,10 @@ class LockerStore {
   async loadActiveRequests() {
     if (
       !authStore.token ||
-      !authStore.canManageLockerRequests
+      !authStore.isAdmin
     ) {
+      this.activeRequests = []
+
       return
     }
 
@@ -219,12 +225,16 @@ class LockerStore {
       'Member'
     ) {
       await this.loadMyRequests()
+    } else {
+      this.myRequests = []
     }
 
     if (
-      authStore.canManageLockerRequests
+      authStore.isAdmin
     ) {
       await this.loadActiveRequests()
+    } else {
+      this.activeRequests = []
     }
   }
 

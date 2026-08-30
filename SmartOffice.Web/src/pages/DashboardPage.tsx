@@ -65,6 +65,8 @@ import RoomReservationsDialog from '../components/reservations/RoomReservationsD
 import LockerCenter from '../components/lockers/LockerCenter'
 import LockerRequestsPanel from '../components/lockers/LockerRequestsPanel'
 
+import UsersSection from '../components/users/UsersSection'
+
 const DashboardPage =
   observer(
     () => {
@@ -815,7 +817,9 @@ const DashboardPage =
               </>
             )}
 
-            {/* ROOMS */}
+            {/* =================================
+                ROOMS
+            ================================= */}
 
             {activeSection ===
               'rooms' && (
@@ -834,13 +838,14 @@ const DashboardPage =
               />
             )}
 
-            {/* LOCKERS */}
+            {/* =================================
+                LOCKERS
+            ================================= */}
 
             {activeSection ===
               'lockers' && (
               <>
-                {authStore
-                  .canManageLockerRequests && (
+                {authStore.isAdmin && (
                   <LockerRequestsPanel />
                 )}
 
@@ -848,7 +853,9 @@ const DashboardPage =
               </>
             )}
 
-            {/* RESOURCES */}
+            {/* =================================
+                RESOURCES
+            ================================= */}
 
             {activeSection ===
               'resources' && (
@@ -862,9 +869,21 @@ const DashboardPage =
                 }
               />
             )}
+
+            {/* =================================
+                USERS - ADMIN ONLY
+            ================================= */}
+
+            {activeSection ===
+              'users' &&
+              authStore.isAdmin && (
+                <UsersSection />
+              )}
           </Container>
 
-          {/* DIALOGS */}
+          {/* =====================================
+              DIALOGS
+          ====================================== */}
 
           <AddAssetDialog
             open={

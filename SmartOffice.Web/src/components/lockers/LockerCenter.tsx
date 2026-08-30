@@ -70,10 +70,10 @@ const STATUS_CONFIG:
       '#4b9932',
   },
 
-  'Pending HR Approval':
+  'Pending Admin Approval':
     {
       label:
-        'Pending HR',
+        'Pending Admin',
 
       background:
         'rgba(222,166,50,.12)',
@@ -196,7 +196,7 @@ const LockerCenter =
         floorLockers.filter(
           (locker) =>
             locker.displayStatus ===
-              'Pending HR Approval' ||
+              'Pending Admin Approval' ||
             locker.displayStatus ===
               'Ready for Key Pickup'
         ).length
@@ -242,7 +242,7 @@ const LockerCenter =
 
             return (
               locker.displayStatus ===
-                'Pending HR Approval' ||
+                'Pending Admin Approval' ||
               locker.displayStatus ===
                 'Ready for Key Pickup'
             )
@@ -259,7 +259,7 @@ const LockerCenter =
         ) => {
           const confirmed =
             window.confirm(
-              `Request ${locker.name}? The request will be sent to HR for approval.`
+              `Request ${locker.name}? The request will be sent to Admin for approval.`
             )
 
           if (!confirmed) {
@@ -544,10 +544,10 @@ const LockerCenter =
 
                 {myRequest.status ===
                 'Pending'
-                  ? 'Waiting for HR approval.'
+                  ? 'Waiting for Admin approval.'
                   : myRequest.status ===
                       'Approved'
-                    ? 'Approved — your key is ready for pickup from HR.'
+                    ? 'Approved — your key is ready for pickup from Admin.'
                     : 'This locker is assigned to you.'}
               </Alert>
             )}
@@ -1141,8 +1141,7 @@ const LockerCenter =
                     </Typography>
                   </Box>
 
-                  {(authStore.isAdmin ||
-                    authStore.isHR) &&
+                  {authStore.isAdmin &&
                     selectedLocker.requestedBy && (
                       <Typography
                         sx={{

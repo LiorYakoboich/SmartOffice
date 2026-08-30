@@ -7,6 +7,7 @@ import {
 } from 'mobx-react-lite'
 
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
@@ -14,24 +15,23 @@ import {
   Typography,
 } from '@mui/material'
 
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
-import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined'
+import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined'
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined'
-import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined'
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
 import {
-  lockerStore,
-} from '../../stores/LockerStore'
+  equipmentRequestStore,
+} from '../../stores/EquipmentRequestStore'
 
 import type {
-  LockerRequest,
-} from '../../stores/LockerStore'
+  EquipmentRequest,
+} from '../../stores/EquipmentRequestStore'
 
 type RequestView =
   | 'action'
-  | 'assigned'
+  | 'checked-out'
 
 function formatDate(
   value: string
@@ -41,18 +41,22 @@ function formatDate(
   ).toLocaleString(
     undefined,
     {
-      day: '2-digit',
+      day:
+        '2-digit',
 
-      month: 'short',
+      month:
+        'short',
 
-      hour: '2-digit',
+      hour:
+        '2-digit',
 
-      minute: '2-digit',
+      minute:
+        '2-digit',
     }
   )
 }
 
-const LockerRequestsPanel =
+const EquipmentRequestsPanel =
   observer(
     () => {
       const [
@@ -64,38 +68,35 @@ const LockerRequestsPanel =
         )
 
       const needsAction =
-        lockerStore
-          .activeRequests
-          .filter(
-            (request) =>
-              request.status ===
-                'Pending' ||
-              request.status ===
-                'Approved'
-          )
+        equipmentRequestStore
+          .needsAdminAction
 
-      const assigned =
-        lockerStore
-          .activeRequests
-          .filter(
-            (request) =>
-              request.status ===
-              'Collected'
-          )
+      const checkedOut =
+        equipmentRequestStore
+          .checkedOutRequests
+
+      if (
+        needsAction.length ===
+          0 &&
+        checkedOut.length ===
+          0
+      ) {
+        return null
+      }
 
       const visibleRequests =
         selectedView ===
         'action'
           ? needsAction
-          : assigned
+          : checkedOut
 
       const renderRequest =
         (
           request:
-            LockerRequest
+            EquipmentRequest
         ) => {
           const loading =
-            lockerStore
+            equipmentRequestStore
               .actionLoadingId ===
             request.id
 
@@ -108,7 +109,8 @@ const LockerRequestsPanel =
               elevation={0}
 
               sx={{
-                padding: 1.6,
+                padding:
+                  1.5,
 
                 borderRadius:
                   '15px',
@@ -144,7 +146,27 @@ const LockerRequestsPanel =
                         '#202337',
 
                       fontSize:
-                        '0.82rem',
+                        '0.8rem',
+
+                      fontWeight:
+                        900,
+                    }}
+                  >
+                    {
+                      request.assetName
+                    }
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      marginTop:
+                        0.2,
+
+                      color:
+                        '#159f99',
+
+                      fontSize:
+                        '0.68rem',
 
                       fontWeight:
                         900,
@@ -161,39 +183,23 @@ const LockerRequestsPanel =
                         0.2,
 
                       color:
-                        '#159f99',
-
-                      fontSize:
-                        '0.71rem',
-
-                      fontWeight:
-                        900,
-                    }}
-                  >
-                    {
-                      request.lockerName
-                    }
-
-                    {' · '}
-
-                    {
-                      request.floor
-                    }
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      marginTop:
-                        0.25,
-
-                      color:
-                        '#999ca6',
+                        '#9a9da6',
 
                       fontSize:
                         '0.61rem',
                     }}
                   >
-                    Requested{' '}
+                    {
+                      request.category
+                    }
+
+                    {' · '}
+
+                    {
+                      request.location
+                    }
+
+                    {' · Requested '}
 
                     {formatDate(
                       request.requestedAtUtc
@@ -206,10 +212,11 @@ const LockerRequestsPanel =
                     display:
                       'flex',
 
-                    gap: 0.7,
-
                     alignItems:
                       'center',
+
+                    gap:
+                      0.6,
 
                     flexWrap:
                       'wrap',
@@ -217,7 +224,9 @@ const LockerRequestsPanel =
                 >
                   {loading && (
                     <CircularProgress
-                      size={17}
+                      size={
+                        17
+                      }
 
                       sx={{
                         color:
@@ -239,7 +248,7 @@ const LockerRequestsPanel =
                         }
 
                         onClick={() =>
-                          void lockerStore
+                          void equipmentRequestStore
                             .approveRequest(
                               request.id!
                             )
@@ -247,7 +256,7 @@ const LockerRequestsPanel =
 
                         sx={{
                           color:
-                            '#4d9e32',
+                            '#4b9633',
 
                           backgroundColor:
                             'rgba(120,201,72,.10)',
@@ -259,7 +268,7 @@ const LockerRequestsPanel =
                             'none',
 
                           fontSize:
-                            '0.68rem',
+                            '0.67rem',
 
                           fontWeight:
                             900,
@@ -278,7 +287,7 @@ const LockerRequestsPanel =
                         }
 
                         onClick={() =>
-                          void lockerStore
+                          void equipmentRequestStore
                             .rejectRequest(
                               request.id!
                             )
@@ -289,7 +298,7 @@ const LockerRequestsPanel =
                             '#d45454',
 
                           backgroundColor:
-                            '#fff4f4',
+                            'rgba(212,84,84,.06)',
 
                           borderRadius:
                             '9px',
@@ -298,7 +307,7 @@ const LockerRequestsPanel =
                             'none',
 
                           fontSize:
-                            '0.68rem',
+                            '0.67rem',
 
                           fontWeight:
                             900,
@@ -317,22 +326,22 @@ const LockerRequestsPanel =
                       }
 
                       startIcon={
-                        <KeyOutlinedIcon />
+                        <MoveToInboxOutlinedIcon />
                       }
 
                       onClick={() =>
-                        void lockerStore
-                          .collectKey(
+                        void equipmentRequestStore
+                          .collectEquipment(
                             request.id!
                           )
                       }
 
                       sx={{
                         color:
-                          '#117e79',
+                          '#117f7a',
 
                         backgroundColor:
-                          'rgba(24,170,163,.10)',
+                          'rgba(24,170,163,.09)',
 
                         borderRadius:
                           '9px',
@@ -341,13 +350,13 @@ const LockerRequestsPanel =
                           'none',
 
                         fontSize:
-                          '0.68rem',
+                          '0.67rem',
 
                         fontWeight:
                           900,
                       }}
                     >
-                      Key Collected
+                      Mark Collected
                     </Button>
                   )}
 
@@ -363,18 +372,18 @@ const LockerRequestsPanel =
                       }
 
                       onClick={() =>
-                        void lockerStore
-                          .returnKey(
+                        void equipmentRequestStore
+                          .returnEquipment(
                             request.id!
                           )
                       }
 
                       sx={{
                         color:
-                          '#6758a8',
+                          '#6357a6',
 
                         backgroundColor:
-                          'rgba(103,88,168,.09)',
+                          'rgba(99,87,166,.08)',
 
                         borderRadius:
                           '9px',
@@ -383,13 +392,13 @@ const LockerRequestsPanel =
                           'none',
 
                         fontSize:
-                          '0.68rem',
+                          '0.67rem',
 
                         fontWeight:
                           900,
                       }}
                     >
-                      Key Returned
+                      Mark Returned
                     </Button>
                   )}
                 </Box>
@@ -401,13 +410,14 @@ const LockerRequestsPanel =
       return (
         <Box
           sx={{
-            marginBottom: 3,
+            marginBottom:
+              2.5,
           }}
         >
           <Box
             sx={{
               marginBottom:
-                1.3,
+                1.1,
 
               display:
                 'flex',
@@ -432,10 +442,11 @@ const LockerRequestsPanel =
                 alignItems:
                   'center',
 
-                gap: 0.8,
+                gap:
+                  0.7,
               }}
             >
-              <PendingActionsOutlinedIcon
+              <Inventory2OutlinedIcon
                 sx={{
                   color:
                     '#159f99',
@@ -448,13 +459,13 @@ const LockerRequestsPanel =
                     '#202337',
 
                   fontSize:
-                    '1.08rem',
+                    '1rem',
 
                   fontWeight:
                     900,
                 }}
               >
-                Locker Management
+                Equipment Requests
               </Typography>
             </Box>
 
@@ -463,7 +474,8 @@ const LockerRequestsPanel =
                 display:
                   'flex',
 
-                gap: 0.7,
+                gap:
+                  0.6,
               }}
             >
               <Button
@@ -481,22 +493,22 @@ const LockerRequestsPanel =
                     selectedView ===
                     'action'
                       ? '#ffffff'
-                      : '#666b79',
+                      : '#6c7180',
 
-                  background:
+                  backgroundColor:
                     selectedView ===
                     'action'
                       ? '#159f99'
                       : '#ffffff',
 
                   border:
-                    '1px solid #e4e7e2',
+                    '1px solid #e3e7e1',
 
                   textTransform:
                     'none',
 
                   fontSize:
-                    '0.68rem',
+                    '0.67rem',
 
                   fontWeight:
                     900,
@@ -510,13 +522,9 @@ const LockerRequestsPanel =
               </Button>
 
               <Button
-                startIcon={
-                  <LockOutlinedIcon />
-                }
-
                 onClick={() =>
                   setSelectedView(
-                    'assigned'
+                    'checked-out'
                   )
                 }
 
@@ -526,32 +534,32 @@ const LockerRequestsPanel =
 
                   color:
                     selectedView ===
-                    'assigned'
+                    'checked-out'
                       ? '#ffffff'
-                      : '#666b79',
+                      : '#6c7180',
 
-                  background:
+                  backgroundColor:
                     selectedView ===
-                    'assigned'
-                      ? '#6258a8'
+                    'checked-out'
+                      ? '#6357a6'
                       : '#ffffff',
 
                   border:
-                    '1px solid #e4e7e2',
+                    '1px solid #e3e7e1',
 
                   textTransform:
                     'none',
 
                   fontSize:
-                    '0.68rem',
+                    '0.67rem',
 
                   fontWeight:
                     900,
                 }}
               >
-                Assigned (
+                Checked Out (
                 {
-                  assigned.length
+                  checkedOut.length
                 }
                 )
               </Button>
@@ -562,13 +570,20 @@ const LockerRequestsPanel =
             elevation={0}
 
             sx={{
-              padding: 1.2,
+              padding:
+                1,
+
+              maxHeight:
+                350,
+
+              overflowY:
+                'auto',
 
               borderRadius:
                 '18px',
 
               border:
-                '1px solid #e5e9e3',
+                '1px solid #e4e8e2',
 
               backgroundColor:
                 '#f9faf8',
@@ -576,45 +591,31 @@ const LockerRequestsPanel =
           >
             {visibleRequests.length ===
             0 ? (
-              <Box
+              <Typography
                 sx={{
-                  paddingY: 3,
+                  padding:
+                    3,
+
+                  color:
+                    '#9296a1',
+
+                  fontSize:
+                    '0.72rem',
 
                   textAlign:
                     'center',
                 }}
               >
-                <Typography
-                  sx={{
-                    color:
-                      '#8d919c',
-
-                    fontSize:
-                      '0.76rem',
-
-                    fontWeight:
-                      700,
-                  }}
-                >
-                  No requests in this section.
-                </Typography>
-              </Box>
+                No requests in this section.
+              </Typography>
             ) : (
               <Box
                 sx={{
-                  maxHeight:
-                    360,
-
-                  overflowY:
-                    'auto',
-
                   display:
                     'grid',
 
-                  gap: 0.8,
-
-                  paddingRight:
-                    0.4,
+                  gap:
+                    0.7,
                 }}
               >
                 {visibleRequests.map(
@@ -623,9 +624,27 @@ const LockerRequestsPanel =
               </Box>
             )}
           </Paper>
+
+          {equipmentRequestStore.error && (
+            <Alert
+              severity="error"
+
+              sx={{
+                marginTop:
+                  1,
+
+                borderRadius:
+                  '12px',
+              }}
+            >
+              {
+                equipmentRequestStore.error
+              }
+            </Alert>
+          )}
         </Box>
       )
     }
   )
 
-export default LockerRequestsPanel
+export default EquipmentRequestsPanel

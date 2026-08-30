@@ -3,29 +3,27 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace SmartOffice.AssetService.Models
 {
-    public class LockerRequest
+    public class EquipmentRequest
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string LockerId { get; set; } = string.Empty;
+        public string AssetId { get; set; } = string.Empty;
 
-        public string LockerName { get; set; } = string.Empty;
+        public string AssetName { get; set; } = string.Empty;
 
-        public string Floor { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
 
-        /*
-            User who requested the locker.
-        */
+        public string Location { get; set; } = string.Empty;
 
         public string RequestedByUserId { get; set; } = string.Empty;
 
         public string RequestedBy { get; set; } = string.Empty;
 
         /*
-            Workflow statuses:
+            Workflow:
 
             Pending
             Approved
@@ -38,23 +36,21 @@ namespace SmartOffice.AssetService.Models
         public string Status { get; set; } = "Pending";
 
         /*
-            True while the request still owns/reserves
-            the locker.
+            Active while the equipment is reserved
+            for an employee or currently being used.
 
             Pending   -> true
             Approved  -> true
             Collected -> true
 
-            Rejected / Returned / Cancelled -> false
+            Rejected  -> false
+            Returned  -> false
+            Cancelled -> false
         */
 
         public bool IsActive { get; set; } = true;
 
         public DateTime RequestedAtUtc { get; set; } = DateTime.UtcNow;
-
-        /*
-            Admin review information.
-        */
 
         public string? ReviewedByUserId { get; set; }
 
@@ -62,11 +58,7 @@ namespace SmartOffice.AssetService.Models
 
         public DateTime? ReviewedAtUtc { get; set; }
 
-        /*
-            Physical key lifecycle.
-        */
-
-        public DateTime? KeyCollectedAtUtc { get; set; }
+        public DateTime? CollectedAtUtc { get; set; }
 
         public DateTime? ReturnedAtUtc { get; set; }
 

@@ -59,12 +59,9 @@ namespace SmartOffice.AssetService.Controllers
             var currentUserId =
                 GetCurrentUserId();
 
-            var isPrivileged =
+            var isAdmin =
                 User.IsInRole(
                     "Admin"
-                ) ||
-                User.IsInRole(
-                    "HR"
                 );
 
             var myActiveRequest =
@@ -141,7 +138,7 @@ namespace SmartOffice.AssetService.Controllers
                                     activeRequest?.Status,
 
                                 RequestedBy =
-                                    isPrivileged ||
+                                    isAdmin ||
                                     isMyRequest
                                         ? activeRequest
                                             ?.RequestedBy
@@ -332,7 +329,7 @@ namespace SmartOffice.AssetService.Controllers
             )
             {
                 return Conflict(
-                    "The locker key has already been collected. Please return the key to HR."
+                    "The locker key has already been collected. Please return the key to Admin."
                 );
             }
 
@@ -357,11 +354,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // HR / ADMIN - PENDING
+        // ADMIN - PENDING
         // =========================================
 
         [HttpGet("requests/pending")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<LockerRequest>>>
             GetPendingRequests()
         {
@@ -375,11 +372,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // HR / ADMIN - ACTIVE
+        // ADMIN - ACTIVE
         // =========================================
 
         [HttpGet("requests/active")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<LockerRequest>>>
             GetActiveRequests()
         {
@@ -393,11 +390,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // APPROVE
+        // ADMIN - APPROVE
         // =========================================
 
         [HttpPost("requests/{requestId}/approve")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LockerRequest>>
             ApproveRequest(
                 string requestId
@@ -465,11 +462,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // REJECT
+        // ADMIN - REJECT
         // =========================================
 
         [HttpPost("requests/{requestId}/reject")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LockerRequest>>
             RejectRequest(
                 string requestId
@@ -512,11 +509,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // KEY COLLECTED
+        // ADMIN - KEY COLLECTED
         // =========================================
 
         [HttpPost("requests/{requestId}/collect")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LockerRequest>>
             MarkKeyCollected(
                 string requestId
@@ -557,11 +554,11 @@ namespace SmartOffice.AssetService.Controllers
         }
 
         // =========================================
-        // KEY RETURNED
+        // ADMIN - KEY RETURNED
         // =========================================
 
         [HttpPost("requests/{requestId}/return")]
-        [Authorize(Roles = "HR,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<LockerRequest>>
             MarkKeyReturned(
                 string requestId
@@ -750,7 +747,7 @@ namespace SmartOffice.AssetService.Controllers
             return request.Status switch
             {
                 "Pending" =>
-                    "Pending HR Approval",
+                    "Pending Admin Approval",
 
                 "Approved" =>
                     "Ready for Key Pickup",

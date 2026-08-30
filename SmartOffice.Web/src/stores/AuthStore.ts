@@ -80,25 +80,6 @@ class AuthStore {
     )
   }
 
-  get isHR() {
-    return (
-      this.user?.role ===
-      'HR'
-    )
-  }
-
-  /*
-    Both HR and Admin can process
-    locker approval workflows.
-  */
-
-  get canManageLockerRequests() {
-    return (
-      this.isAdmin ||
-      this.isHR
-    )
-  }
-
   private restoreSession() {
     const storedToken =
       localStorage.getItem(
